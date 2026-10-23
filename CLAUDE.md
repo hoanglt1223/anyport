@@ -31,7 +31,10 @@ pwsh tests/fetch-corpus.ps1   |   sh tests/fetch-corpus.sh   # test ROM corpus, 
 cmake -S . -B out/msvc -G "Visual Studio 17 2022" -A x64 && cmake --build out/msvc --config Release
 ctest --test-dir out/msvc -C Release
 out/msvc/.../hello.exe --smoke                         # headless; never run windowed on this PC
-cd swf2c && cargo test && cargo clippy -- -D warnings
+cd swf2c && cargo test && cargo clippy --all-targets -- -D warnings
+swf2c inspect game.swf  |  swf2c assets game.swf -o assets.bin
+anyswf-player assets.bin --screenshot f.png            # headless frame-1 render
+tests/render/run.sh <anyswf-player> [max-phase]        # render tests vs Ruffle references (PYTHON=... on Windows)
 sh tests/fetch-mtasc.sh && sh tests/build-corpus.sh    # self-authored AS2 test SWFs
 sh scripts/psp-build.sh                                # PSP EBOOT via pspdev Docker image (needs Docker running)
 ```
@@ -41,9 +44,12 @@ sh scripts/psp-build.sh                                # PSP EBOOT via pspdev Do
 ```
 cargo test --workspace                      # host unit + localhost e2e + C-vs-Rust crypto/protocol cross-checks
 cargo test -p <crate> <test_name>           # single test
-cargo run -p <host crate> -- --headless     # never launch the tray UI on this PC
+cargo run -p companion-host -- --headless --config <scratch config bound to 127.0.0.1>   # never launch the tray UI on this PC
+cargo run -p pspc-fontgen                   # regenerate psp/font_vi.c after editing psp/assets/font-vi.hex
 sh scripts/build-psp.sh                     # PSP EBOOT via pspdev Docker image (needs Docker running)
 ```
+
+Host tests never inject input, touch the microphone, or play audio: desktop actions go through the `actions::Executor` trait (tests use a recording executor).
 
 **AnyPSP** (`repos/anypsp`; GPL-2.0-or-later; `recomp/` = PSPRecomp f6e7d41 + psp-web-recomp patches, `runtime/` = psp-web-recomp host, provenance in `THIRD_PARTY.md`):
 

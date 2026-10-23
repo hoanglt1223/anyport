@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Decoder and function discovery"
-status: in-progress
+status: completed
 effort: 2w
 dependsOn: [1]
 ---

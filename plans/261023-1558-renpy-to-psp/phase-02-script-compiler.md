@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Script reader and bytecode compiler"
-status: in-progress
+status: completed
 effort: 3w
 dependsOn: [1]
 ---
@@ -44,3 +44,10 @@ The PSP engine runs a compact bytecode, so all parsing and validation happens on
 ## Rollback
 
 Module-scoped; revert.
+
+## Result (2026-10-23)
+
+- Code is in `rpy2psp/rpy2psp/compiler/`; `translate.py` was added for dialogue IDs. The format is in `docs/dev/bytecode.md`. Commit: `affea80`.
+- The three targets compile with zero errors. Every menu path plays in the reference interpreter. All 70 dialogue translations of The Question (ja, ko, zh-Hans, zh-Hant) match by ID.
+- Corpus coverage: 5 of 15 compile with zero errors (the same five that the census predicted).
+- Arcance's Ren'Py 6.99 `.rpyc` files compile to the same code as its `.rpy` files.

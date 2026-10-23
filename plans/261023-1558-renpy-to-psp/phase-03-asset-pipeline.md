@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Asset pipeline"
-status: pending
+status: completed
 effort: 2w
 dependsOn: [1]
 ---
@@ -38,3 +38,16 @@ Desktop VN assets (1280x720 or 1920x1080 PNG/WebP, OGG/Opus audio, TrueType font
 ## Rollback
 
 Module-scoped; revert.
+
+## Result (2026-10-23)
+
+- Code is in `rpy2psp/rpy2psp/assets/`. The format is in `docs/dev/pack-format.md`. Commit: `5287506`.
+- Deviation, DXT is not swizzled: the GE has no swizzled DXT mode (checked in PPSSPP), so DXT is stored in the GE block order. Swizzling applies to the T4/T8 glyph atlases.
+- Deviation, movies: these become an H.264 Baseline elementary stream plus MP3 instead of PSMF. Playback is still to be proven in phase 04.
+- Sizes: The Question 1.1 MiB, Zero Echoes 2.3 MiB, Arcance 2.3 MiB, all far under the 300 MB limit.
+- `rpy2psp verify` passes for all three targets:
+  - images: PSNR minimum 22.9 dB, mean 27.8 to 34.8 dB depending on the game;
+  - glyphs: exact match, including the Japanese build of The Question;
+  - music: 128 kbps / 44.1 kHz, SNR 24 dB;
+  - ADPCM: SNR 31 to 42 dB.
+- Spot checks of decoded textures and the CJK atlas look correct.

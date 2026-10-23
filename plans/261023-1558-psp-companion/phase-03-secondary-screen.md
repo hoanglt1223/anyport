@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Secondary screen: widgets, cursor, macros"
-status: pending
+status: in-progress
 effort: 1-2w
 dependsOn: [1]
 ---

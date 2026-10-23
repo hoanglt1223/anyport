@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "PC audio to PSP speakers"
-status: pending
+status: in-progress
 effort: 1w
 dependsOn: [1]
 ---

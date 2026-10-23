@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Prior-art check and feature census"
-status: blocked
+status: completed
 effort: 1w
 dependsOn: []
 ---
@@ -17,7 +17,7 @@ Decide the supported subset from data, not guesses.
 - Search for existing Ren'Py-to-console converters or PSP VN engines that could be reused.
 - Pick 15 free Ren'Py games of different sizes and eras (Ren'Py 6, 7, 8).
 - Census script (runs on PC with Ren'Py's own parser) counting statement types, ATL features, transitions, Python statement shapes, screen usage, and asset formats per game.
-- Choose the supported subset that covers at least 10 of the 15 games fully.
+- Choose the supported subset from the census. (The original target of 10 of 15 games was not reachable without a Python runtime: 5 of 15 are covered. The user narrowed the scope on 2026-10-23, see the gate.)
 
 ## Files (create)
 
@@ -30,7 +30,9 @@ Decide the supported subset from data, not guesses.
 
 ## Exit criteria (gate)
 
-- Subset documented; at least three target games fully inside it.
+- Subset documented in `docs/dev/census.md` and `tools/census/subset.json`: met.
+- Three target games fully inside it (The Question, Zero Echoes, Arcance): met.
+- Corpus coverage measured and reported (5 of 15, the user-accepted replacement for "10 of 15"): met.
 
 ## Rollback
 
