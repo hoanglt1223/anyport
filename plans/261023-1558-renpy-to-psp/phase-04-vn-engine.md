@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Native VN engine on PSP"
-status: pending
+status: in-progress
 effort: 3-4w
 dependsOn: [2, 3]
 ---

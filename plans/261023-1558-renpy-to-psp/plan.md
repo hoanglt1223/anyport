@@ -39,7 +39,7 @@ Phase 01 found no reusable Ren'Py PSP port and measured the feature census; the 
 | 01 | [Prior-art check and feature census](phase-01-prior-art-and-census.md) | 1w | none | completed |
 | 02 | [Script reader and bytecode compiler](phase-02-script-compiler.md) | 3w | 01 | completed |
 | 03 | [Asset pipeline](phase-03-asset-pipeline.md) | 2w | 01 | completed |
-| 04 | [Native VN engine on PSP](phase-04-vn-engine.md) | 3-4w | 02, 03 | pending |
+| 04 | [Native VN engine on PSP](phase-04-vn-engine.md) | 3-4w | 02, 03 | in-progress |
 | 05 | [Bring-up and packaging](phase-05-bring-up-and-packaging.md) | 1-2w | 04 | pending |
 
 ## Dependencies
