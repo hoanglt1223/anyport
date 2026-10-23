@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "SWF parsing and asset pipeline"
-status: pending
+status: in-progress
 effort: 2w
 dependsOn: [1]
 ---

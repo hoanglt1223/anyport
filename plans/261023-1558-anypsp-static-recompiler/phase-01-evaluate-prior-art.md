@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Evaluate PSPRecomp and prior ports, choose base"
-status: in-progress
+status: completed
 effort: 2w
 dependsOn: []
 ---

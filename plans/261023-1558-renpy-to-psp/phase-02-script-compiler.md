@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Script reader and bytecode compiler"
-status: pending
+status: in-progress
 effort: 3w
 dependsOn: [1]
 ---

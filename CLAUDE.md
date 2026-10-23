@@ -45,6 +45,18 @@ cargo run -p <host crate> -- --headless     # never launch the tray UI on this P
 sh scripts/build-psp.sh                     # PSP EBOOT via pspdev Docker image (needs Docker running)
 ```
 
+**AnyPSP** (`repos/anypsp`; GPL-2.0-or-later; `recomp/` = PSPRecomp f6e7d41 + psp-web-recomp patches, `runtime/` = psp-web-recomp host, provenance in `THIRD_PARTY.md`):
+
+```
+cmake -S . -B out/msvc -G "Visual Studio 17 2022" -A x64 && cmake --build out/msvc --config Release
+ctest --test-dir out/msvc -C Release                   # framework test (psprecomp_tests)
+python tests/fetch-corpus.py                           # pspautotests binaries, commit + SHA-256 pinned, git-ignored
+out/msvc/recomp/Release/psp_analyze.exe <ELF/PRX> out/reports/<name>.json
+out/msvc/recomp/Release/psp_recomp.exe <ELF/PRX> --auto <out dir>
+```
+
+`runtime/` does not build on Windows yet (Emscripten/Linux EGL only). Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys).
+
 A local hook blocks paths named `build`, so put build output in a scratch folder rather than `repos/*/build`.
 
 ## Cross-project architecture decisions
