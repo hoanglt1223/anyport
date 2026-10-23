@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "PPU renderer"
-status: pending
+status: completed
 effort: 2w
 dependsOn: [4]
 ---

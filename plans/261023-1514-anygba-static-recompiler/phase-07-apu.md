@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "APU"
-status: pending
+status: completed
 effort: 1w
 dependsOn: [4]
 ---

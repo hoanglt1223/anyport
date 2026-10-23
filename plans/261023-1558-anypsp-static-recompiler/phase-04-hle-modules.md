@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "HLE kernel and system modules"
-status: pending
+status: in-progress
 effort: 8-12w
 dependsOn: [3]
 ---

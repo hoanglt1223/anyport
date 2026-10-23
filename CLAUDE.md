@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `plans/<timestamp>-<slug>/`: the source of truth for scope. `plan.md` holds outcome, acceptance criteria, non-goals, and the phase table; `phase-NN-*.md` hold requirements, files, steps, and validation. Read the relevant plan before writing code. Validate after editing with `ak plan validate plans/<dir>`. `plans/journals/` is work history only.
 - `repos/`: our own repos, each its own git repo (local only so far, no commits). Run git commands inside the specific repo, never at the workspace root.
-- `refs/`: shallow clones of upstream projects (AnyPS5, PPSSPP, Ruffle, psprecomp, Moonlight-PSP, libnx, pspsdk, TIC-80, fake-08, LövePotion, OpenGMK, N64Recomp, companion-satellite, moonlight-common-c, gba-tests). Read-only reference: never edit or commit there, and check the upstream license before adapting any code.
+- `refs/`: shallow clones of upstream projects (AnyPS5, PPSSPP, Ruffle, psprecomp, Moonlight-PSP, libnx, pspsdk, TIC-80, fake-08, LÃ¶vePotion, OpenGMK, N64Recomp, companion-satellite, moonlight-common-c, gba-tests). Read-only reference: never edit or commit there, and check the upstream license before adapting any code.
 
 Build, test, and lint commands are defined in each plan's phase 01; add them below as each repo gains them.
 
@@ -27,6 +27,9 @@ anygba-recomp game.gba --output <dir> [--config game.toml] [--miss-log anygba-mi
 cmake --build <out> --config Release --target varooom-3d  # on-demand large generated program (also tonc-<demo>)
 platform-smoke --headless --frames 60 --scale 2          # never run it windowed: no audio/windows on this PC
 <game> <rom> --headless [--pace] [--frames N] [--exit-on-idle]   # generated games: always --headless on this PC
+<out>/bin/Release/anygba-shot.exe rom.gba --frames N [--shot F:x.png] [--hash F] [--wav x.wav] [--keys a:10-20] [--dump vram:x.bin]  # interpreter-only headless run
+python tests/oracle/mgba-oracle.py --core mgba_libretro.dll rom.gba --frames N [same options]   # mGBA reference (build: tests/oracle/README.md)
+python tests/oracle/make-{bios-reference,ppu-goldens,apu-references}.py --core ...   # regenerate committed references
 ```
 
 **AnySWF** (`repos/anyswf`; CMake + MSVC for the SDL/PC target, cargo for `swf2c`, Docker for PSP):
@@ -68,9 +71,18 @@ out/msvc/Release/anypsp-analyze.exe --out <dir> [--feedback f] EBOOT.BIN [MODULE
 out/msvc/recomp/Release/psp_recomp.exe <ELF/PRX> --auto <gen dir> --seeds <dir>/0_<module>_seeds.csv
 cmake -S . -B out/runners/<n> -DANYPSP_RUNNER_NAME=<n> -DANYPSP_RUNNER_GENERATED=<gen dir> [-DANYPSP_RUNNER_OPT=d]
 python tests/feedback-pass.py <module> [--frames 300]  # analyze -> translate -> headless run -> feedback loop
+out/msvc/Release/anypsp-interp.exe <module> [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--dump-at f,...] [--hle-stubs file]
+                                                       # interpreter-only runner (no translation, seconds to start)
+python tests/conformance.py [cpu/...] [--runner exe]   # pspautotests output vs .expected (default runner: anypsp-interp)
+python tests/translated-conformance.py [cpu/...]        # same, through psp_recomp-translated runners (one shared build tree)
+out/msvc/Release/anypsp_cpu_difftest.exe               # generated code vs reference interpreter, random states (ctest cpu_difftest)
+out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|soft] [--scale n] [--frames-dir d] [--hashes f] [--screenshot f.png]
+python tests/ge-screenshots.py [--renderer gl|soft] [filter]  # pspautotests GE tests vs PPSSPP reference screenshots (MSE)
 ```
 
-Runners are headless (no window, no audio). Pipeline and file formats: `repos/anypsp/docs/dev/loader-and-analysis.md`. The web/EGL build in `runtime/CMakeLists.txt` is upstream's and untested here. Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys). Write files from Python with `write_bytes`: `write_text` on Windows produces CRLF.
+GE renderer: desktop OpenGL 3.3 core via SDL3 (fetched by CMake; `-DANYPSP_BUILD_GPU=OFF` skips it) on a hidden window that is never shown; frames go to PNG files and per-frame hashes. `anypsp-run-<name>-gpu` is built next to each per-game runner. Code: `runtime/gpu/`, `runtime/host/ge*.{cpp,hpp}`.
+
+Runners are headless (no window, no audio). The CPU reference interpreter in `runtime/cpu/` is adapted from PPSSPP; generated code calls `anypsp::cpu::execute` for instructions it does not translate inline. Write Python edit scripts with the Write tool, not shell heredocs: the shell layer here rewrites backslash escapes. Pipeline and file formats: `repos/anypsp/docs/dev/loader-and-analysis.md`. The web/EGL build in `runtime/CMakeLists.txt` is upstream's and untested here. Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys). Write files from Python with `write_bytes`: `write_text` on Windows produces CRLF.
 
 **rpy2psp** (`repos/rpy2psp`; Python converter + C11 engine `vnpsp/`, platform layer vendored from AnySWF in `third_party/psp-platform/`):
 
@@ -90,10 +102,10 @@ A local hook blocks paths named `build`, so put build output in a scratch folder
 
 ## Cross-project architecture decisions
 
-- **AnySWF, Ren'Py → PSP, and the engine runners share one PSP platform layer** (GU init, input, audio, files, clock), built in AnySWF phase 01 with both a `psp/` and an `sdl/` backend. The runners phase extracts it as `psp-platform`. Reuse it; do not write a second one.
+- **AnySWF, Ren'Py â†’ PSP, and the engine runners share one PSP platform layer** (GU init, input, audio, files, clock), built in AnySWF phase 01 with both a `psp/` and an `sdl/` backend. The runners phase extracts it as `psp-platform`. Reuse it; do not write a second one.
 - **AnyGBA's toolchain is reused by AnySwitch**: CMake/CI skeleton, SDL3 platform layer, per-game TOML config, headless mode, and the compat tracker (`compat/*.toml` rendered to a static progress page). AnySWF, AnyPSP, and Ren'Py use the same compat format.
 - **Phase 01 is a gate in several plans** (AnySwitch ABI spikes, AnyPSP evaluation of PSPRecomp, N64 decomp route spike, engine runner prior-art checks). Do not start later phases until the gate's exit criteria are recorded.
-- **Forks are created only after their phase 01 decision** (N64 decomp game, TIC-80, fake-08, LövePotion, OpenGMK). Forking or pushing to GitHub is public, so ask first.
+- **Forks are created only after their phase 01 decision** (N64 decomp game, TIC-80, fake-08, LÃ¶vePotion, OpenGMK). Forking or pushing to GitHub is public, so ask first.
 - **HLE strictness follows AnyPS5**: an unknown SVC, NID, SWI, service, or command throws with a clear name/ID message. It can only be stubbed explicitly through per-game config.
 
 ## Hard constraints

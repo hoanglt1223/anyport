@@ -1,7 +1,7 @@
 ---
 title: "AnySWF: compile Flash (AS1/AS2) games ahead of time into native PSP homebrew"
 description: "Turn a SWF file into a PSP EBOOT by compiling its ActionScript bytecode to C and tessellating its vector art into triangle meshes at build time, with a small native runtime for the display list and Flash APIs."
-status: pending
+status: in-progress
 priority: P2
 effort: 12-16w part-time
 branch: main
@@ -55,10 +55,10 @@ game.swf ─► swf2c (Rust)                                libswfrt
 
 | # | Phase | Effort | Depends on | Status |
 |---|---|---|---|---|
-| 01 | [Repo, PSP toolchain, platform layer, test corpus](phase-01-repo-toolchain-platform.md) | 1-2w | none | pending |
-| 02 | [SWF parsing and asset pipeline](phase-02-swf-parsing-and-assets.md) | 2w | 01 | pending |
+| 01 | [Repo, PSP toolchain, platform layer, test corpus](phase-01-repo-toolchain-platform.md) | 1-2w | none | in-progress |
+| 02 | [SWF parsing and asset pipeline](phase-02-swf-parsing-and-assets.md) | 2w | 01 | completed |
 | 03 | [GE renderer and display list](phase-03-ge-renderer-and-display-list.md) | 3w | 02 | pending |
-| 04 | [AVM1 ahead-of-time compiler](phase-04-avm1-aot-compiler.md) | 3-4w | 02 | pending |
+| 04 | [AVM1 ahead-of-time compiler](phase-04-avm1-aot-compiler.md) | 3-4w | 02 | in-progress |
 | 05 | [Runtime built-ins: MovieClip, Key, Mouse, Sound, SharedObject](phase-05-runtime-builtins.md) | 2-3w | 03, 04 | pending |
 | 06 | [Performance and memory tuning on PSP-3000](phase-06-psp-performance.md) | 1-2w | 05 | pending |
 | 07 | [Game bring-up and compatibility list](phase-07-game-bring-up.md) | ongoing | 06 | pending |

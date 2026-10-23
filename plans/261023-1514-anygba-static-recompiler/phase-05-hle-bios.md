@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "HLE BIOS"
-status: pending
+status: completed
 effort: 1w
 dependsOn: [4]
 ---

@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "GE renderer on Vulkan"
-status: pending
+status: in-progress
 effort: 8-12w
 dependsOn: [4]
 ---
@@ -42,3 +42,9 @@ The PSP GE consumes display lists from RAM. The renderer parses them and draws w
 ## Rollback
 
 Module-scoped; revert.
+
+## Decision (2026-10-24): desktop OpenGL 3.3 first, Vulkan later behind the same seam
+
+The host already had a mature GLES 3 GE backend (`runtime/host/ge_gl.cpp`: surfaces per VRAM region, render-to-texture, stencil-in-alpha, format reinterpretation, internal scaling). Every GL call it makes exists in desktop GL 3.3 core, so porting it took a loader and a shader version line, while a Vulkan backend would mean rewriting that surface manager. No Vulkan SDK is installed on the dev PC either. Vulkan stays the target for Android/MoltenVK and plugs into the same `GeRenderer` seam (`runtime/host/ge_renderer.hpp`).
+
+Status and progress: `plans/reports/fullstack-developer-261023-2356-anypsp-ge-renderer.md`.

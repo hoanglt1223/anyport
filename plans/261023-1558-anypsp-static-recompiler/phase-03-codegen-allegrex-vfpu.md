@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Code generation: Allegrex and VFPU to C++"
-status: pending
+status: in-progress
 effort: 6-8w
 dependsOn: [2]
 ---

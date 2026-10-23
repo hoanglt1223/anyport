@@ -44,9 +44,9 @@ AnyPSP aims at what AnyPS5 does for PS5: a **game-agnostic** pipeline with HLE r
 |---|---|---|---|---|
 | 01 | [Evaluate PSPRecomp and prior ports, choose base](phase-01-evaluate-prior-art.md) | 2w | none | completed |
 | 02 | [Loader and analysis: PRX, relocations, NIDs, function discovery](phase-02-loader-and-analysis.md) | 4-6w | 01 | completed |
-| 03 | [Code generation: Allegrex and VFPU to C++](phase-03-codegen-allegrex-vfpu.md) | 6-8w | 02 | pending |
-| 04 | [HLE kernel and system modules](phase-04-hle-modules.md) | 8-12w | 03 | pending |
-| 05 | [GE renderer on Vulkan](phase-05-ge-vulkan-renderer.md) | 8-12w | 04 | pending |
+| 03 | [Code generation: Allegrex and VFPU to C++](phase-03-codegen-allegrex-vfpu.md) | 6-8w | 02 | in-progress |
+| 04 | [HLE kernel and system modules](phase-04-hle-modules.md) | 8-12w | 03 | in-progress |
+| 05 | [GE renderer on Vulkan](phase-05-ge-vulkan-renderer.md) | 8-12w | 04 | in-progress (desktop GL 3.3 backend first) |
 | 06 | [Hosts: desktop, Android, ARM handhelds](phase-06-hosts.md) | 3-4w | 05 | pending |
 | 07 | [Game bring-up and coverage tracking](phase-07-bring-up-and-coverage.md) | ongoing | 06 | pending |
 
