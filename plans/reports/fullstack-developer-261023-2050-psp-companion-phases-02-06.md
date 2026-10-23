@@ -141,35 +141,95 @@ Status line: `in-progress`. The validation is 10 Vietnamese and 10 English quest
 - whisper.cpp and Piper: not installed. Their integration tests skip with a message, and the CLI argument choices (`-l auto -nt -np`, `--output_raw`) come from their documentation, not from a run.
 - The PSP microphone path (`sceAudioInputBlocking` at 11025 Hz; the input-init gain value is undocumented, as noted in phase 01), real-device latency, and the 20-question validation.
 
-## Phase 06: not started
+## Phase 06 (Stream Deck mode): host done, PSP code written, live Companion and hardware validation pending
+
+Status line: `in-progress`. The validation is OBS scene switching and Spotify play/pause from the PSP with a real Companion.
+
+### Built (commit 4ec5c48)
+- **API check**: the current Satellite API documentation (companion.free) was read before implementing, along with the read-only reference client in `refs/companion-satellite`.
+  - Supported range: ApiVersion 1.5 up to (not including) 2.0. That is Companion 3.2 or later; page switching needs 1.10, which is Companion 4.3 or later.
+  - The range is pinned in code and documented in the README.
+- **`host/src/streamdeck/satellite.rs`**:
+  - Line codec: quoted values, upper-cased keys, OK/ERROR status.
+  - TCP client: BEGIN version check, waits for CAPS on 1.10 and later, then `ADD-DEVICE` in simple mode (`KEYS_TOTAL=18 KEYS_PER_ROW=6 BITMAPS=76 COLORS/TEXT/BRIGHTNESS=false`, plus `CAN_CHANGE_PAGE` on 1.10 and later).
+  - Handles `KEY-STATE` (base64 RGB) and `KEYS-CLEAR`, answers `PING` with `PONG`, sends `PING` every 2 s, and drops the connection after 10 s of silence.
+  - Reconnects with 1-30 s back-off and re-registers every PSP.
+  - Lines are capped at 2 MB.
+- **`host/src/streamdeck/bridge.rs`**:
+  - Per-PSP `Deck`: IDX8-LZ4 key images with per-session cache tracking.
+  - At most one new image per 200 ms (5 per second); updates that reuse a cached image are unlimited.
+  - An animation (more than 3 changes in 2 s) is held until it settles, then the last frame is sent.
+  - `DeckLayout` 6x3 at 76x76, or 0x0 when Companion is unreachable.
+  - Presses and releases are forwarded separately; keys 254 and 255 map to `CHANGE-PAGE`.
+  - Config: `[streamdeck]`.
+- **Protocol**: PROTOCOL.md gained a "Stream Deck mode" section (layout semantics, cache reuse, pacing, page keys).
+- **PSP**:
+  - `streamdeck.c`: full-screen grid; a 40-slot decoded-image cache whose eviction never drops a visible key; D-pad or cursor selection; X press, with release sent when X is let go; L/R pages.
+  - When Companion is unreachable, the screen shows a message and Triangle opens the macro pad.
+  - The deck codecs are in `protocol.c`, and there is a "Stream Deck" menu item.
+- **CI**: `.github/workflows/release.yml` (commit ce71092). On a `v*` tag it runs Windows `cargo test --workspace` and a release build, builds the EBOOT through `scripts/build-psp.sh` on an Ubuntu runner (the Alpine pspdev image cannot host JavaScript actions as a job container), and attaches `companion-host-<tag>-windows-x64.exe` and `psp-companion-<tag>-psp.zip` to a GitHub Release with `gh`. No tag was created.
+
+### Verified
+- Host unit tests:
+  - Line parsing and formatting (escaped quotes, base64 padding, bodies) and the version range.
+  - Bitmap decoding (size check, `data:` URLs rejected).
+  - Deck pacing: 18 new keys produce 5 images in 1 s; cached swaps go out immediately with no data.
+  - Unchanged and flip-flop updates are not resent; an animation sends at most 2 frames, then its final frame; a clear produces 1 image plus 17 cache hits.
+- `host/tests/streamdeck_e2e.rs`: a fake Companion built from the documented protocol, the real host, and a test PSP.
+  - Registration parameters are correct; the layout is 6x3 at 76x76.
+  - 18 key images decode to the colours sent, with at most 6 new images in the first second.
+  - KEY-PRESS true/false lines are correct, and R maps to `CHANGE-PAGE DIRECTION=1`; an out-of-grid key is ignored.
+  - Page 1 images arrive; a single key change arrives in under 1 s; returning to page 0 reuses cached IDs with no data.
+  - When Companion drops, the PSP gets the 0x0 layout; the host reconnects, re-adds the device, and the PSP gets 6x3 again.
+  - Bye leads to `REMOVE-DEVICE`.
+- `tools/xcheck/tests/deck_xcheck.rs`: a bridge-produced key image parses and decodes in C to exactly the host's pixels; the layout, cache-reuse and key-press codecs work both ways.
+- Final state: `cargo test --workspace` passes everything:
+  - 103 host unit tests.
+  - e2e: 4 core, 1 widgets, 2 audio, 2 voice, 1 Stream Deck.
+  - xcheck: 7 crypto, 3 protocol, 8 widgets, 5 audio, 3 voice, 2 deck.
+  - 3 fontgen.
+- `cargo clippy --workspace --all-targets`: 0 warnings. `cargo fmt --check`: clean.
+- PSP C type check across all 22 PSP sources (MSVC `/W4 -vv`, pspsdk headers): no errors, only the known MSVC or 64-bit-host warning classes.
+- Headless smoke run: clean start and exit, no process left, and the log folder removed.
+- `ak plan validate plans/261023-1558-psp-companion`: valid.
+
+### Not verified
+- A real Bitfocus Companion (none is installed; nothing listens on 16622 here), OBS and Spotify buttons, and the PSP grid on hardware.
+- The release workflow has not run. It needs a tag, and the PSP job depends on the `pspdev/pspdev:latest` image building this code, which is itself unverified.
+
+## Overall state across phases 02, 03, 04, 06
+- All four phase files are set to `status: in-progress`. Host code is complete and tested; PSP code is written and type-checked but not compiled with the PSP toolchain. Each phase's validation needs the real PSP-3000 (and, for 02 and 06, a Claude key, whisper.cpp/Piper, and Companion).
+- `plan.md`'s phase table was not edited (the instructions limit edits to phase status lines).
+- Commits, local only and not pushed: d3b0d91, c619576 (phase 03), f932bfe (phase 04), b84bb35 (phase 02), 4ec5c48 (phase 06), ce71092 (CI).
+- Workspace `CLAUDE.md`, PSP Companion section: commands, the test-isolation rules (recording executor, generated audio, local API servers, Stream Deck off in e2e tests), env vars for the whisper.cpp and Piper tests, and the release trigger.
 
 ## Environment
-- No Docker or WSL distro. `ANTHROPIC_API_KEY` is unset. whisper.cpp and Piper are not installed. `ffmpeg` is on PATH but unused.
-- A local hook blocks Bash commands containing `build` or `target` paths. Use `cargo run` rather than calling binaries under `target/`.
+- Docker CLI is installed (`C:\Program Files\Docker\Docker\resources\bin\docker.exe`, not on PATH), but the engine is not running: the `docker_engine` pipe is missing. Starting Docker Desktop opens a window, so it was not started. There is no WSL distro.
+- `ANTHROPIC_API_KEY` is unset. whisper.cpp and Piper are not installed.
+- A local hook blocks Bash commands that contain `build`, `target` or `.next` paths. Use `cargo run` and the Write tool.
+- PSP C type-check harness: `scratchpad/pspsyntax` (session scratchpad). Run `PSP_FILES=a.c,b.c cargo check -vv` and read the warnings in the `-vv` output.
 
 ## Resume from here
-Next step: phase 06 (Stream Deck mode).
-1. `host/src/streamdeck/satellite.rs`: a line-protocol codec and a TCP client for Companion.
-   - Parse `KEY=VALUE` and quoted values; `BEGIN` with an `ApiVersion` check (1.5 up to, not including, 2.0); `CAPS`.
-   - Register the device: `ADD-DEVICE DEVICEID=psp-<id> PRODUCT_NAME="PSP Companion" KEYS_TOTAL=18 KEYS_PER_ROW=6 BITMAPS=76 COLORS=false TEXT=false`, adding `CAN_CHANGE_PAGE` when the API is 1.10 or later.
-   - Handle `KEY-STATE` (base64 RGB `BITMAP`), `KEYS-CLEAR`, `BRIGHTNESS`, `LOCKED-STATE`, and `PING`/`PONG`. Send `PING` every 2 s and reconnect with back-off.
-2. `host/src/streamdeck/bridge.rs`:
-   - Per PSP session: on SessionUp send `DeckLayout` 6x3 at 76x76.
-   - Turn key bitmaps into IDX8-LZ4 (`imaging.rs`) with image ID cache tracking per session; send at most 5 key updates per second, coalesced per key.
-   - Map `DeckKeyPress` to `KEY-PRESS`, and page L/R to `CHANGE-PAGE`.
-   - Config: `[streamdeck] enabled, host, port 16622`.
-   - Fallback: when Companion is not reachable, the PSP uses the macro pad (already in phase 03).
-3. Tests: a fake Satellite server in `host/tests/streamdeck_e2e.rs`, built from the documented protocol.
-4. PSP:
-   - `streamdeck.c`: parse `DeckLayout` and `DeckKeyImage`, using `image.c` and a cache by `image_id`.
-   - 6x3 grid, D-pad or cursor selection, X press/release as separate events (long press), L/R pages.
-   - Add a menu item; add the deck codecs to `protocol.c` with xcheck tests.
-5. Add `.github/workflows/release.yml`: on tag `v*`, build the Windows host exe and the EBOOT (pspdev container) and attach both to a GitHub Release.
+All four phases are implemented and committed. The next steps need resources this run did not have:
+1. **PSP build**, once the Docker engine runs: `sh scripts/build-psp.sh` in `repos/psp-companion`, then fix any gcc/pspsdk link errors.
+   - Libraries added: `-lpspge -lpspaudiocodec`; `psprtc`, `pspaudio` and `psputility` were already there.
+   - Likely spots to check first: the `sceAudiocodec` context words in `psp/mp3_player.c`, and `sceUtilityLoadAvModule` in a user-mode EBOOT.
+2. **Live Claude smoke**: set `ANTHROPIC_API_KEY` and send one short request through `ClaudeClient` (or the voice e2e flow against `https://api.anthropic.com`). Report only success or failure.
+3. **On-device validation** (PPSSPP first, then the PSP-3000 via psplink), per phase:
+   - Phase 03: widgets for one hour at under 5 kbps.
+   - Phase 04: 30 minutes of music without dropouts, latency under 300 ms.
+   - Phase 02: 10 Vietnamese and 10 English questions, first audio within about 3 s.
+   - Phase 06: OBS and Spotify buttons through a real Companion.
 
-PSP C type-check harness: `scratchpad/pspsyntax`. Run `PSP_FILES=a.c,b.c cargo check -vv` and read the warnings in the `-vv` output; without `-vv` only errors show.
+   Set each phase to completed only after its validation passes.
+4. Phase 05 (polish and packaging) builds on this: home menu, power, installer.
 
-Satellite notes for phase 06 (from https://companion.free/for-developers/Satellite-API): TCP 16622, line protocol, BEGIN with ApiVersion then CAPS (1.10+). Use simple mode: `ADD-DEVICE DEVICEID=... PRODUCT_NAME=... KEYS_TOTAL=18 KEYS_PER_ROW=6 BITMAPS=76`. `KEY-STATE` carries a base64 RGB BITMAP; `KEY-PRESS DEVICEID KEY PRESSED`; `CHANGE-PAGE` needs 1.10 and `CAN_CHANGE_PAGE`. Send PING about every 2 s. Pin the supported range to ApiVersion 1.5 up to (not including) 2.0.
+## Unresolved questions
+1. Can Docker Desktop be started (it opens a window) to verify the EBOOT build, or should that wait for the user?
+2. When Companion is not running, the host retries every 1-30 s (debug-level logs only). Should Stream Deck mode default to `enabled = false` instead?
+3. "At most 5 key updates per second" is implemented as 5 new images per second per PSP; cached-image reuse is unlimited. A first full page therefore takes about 3.6 s to appear. Is that acceptable, or should the limit apply only to sustained traffic?
+
 
 Status: DONE_WITH_CONCERNS
-Summary: Phases 03, 04 and 02 are committed, with the host fully tested and the PSP code type-checked against the pspsdk headers. Phase 06 and the release workflow remain.
-Concerns/Blockers: Docker is unavailable, so the EBOOT has not been built or run on hardware.
+Summary: Phases 03, 04, 02 and 06 are built and committed locally (not pushed), with the host fully tested (unit, localhost e2e, and C-vs-Rust cross-checks) and the PSP code type-checked against the pspsdk headers, plus a tag-triggered release workflow.
+Concerns/Blockers: The PSP EBOOT has not been compiled or run, because the Docker engine is not running. No live Claude request was made (ANTHROPIC_API_KEY is unset). whisper.cpp, Piper, and Bitfocus Companion were not available. Every phase stays in-progress until on-device validation.

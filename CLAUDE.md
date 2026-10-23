@@ -53,7 +53,7 @@ cargo run -p pspc-fontgen                   # regenerate psp/font_vi.c after edi
 sh scripts/build-psp.sh                     # PSP EBOOT via pspdev Docker image (needs Docker running)
 ```
 
-Host tests never inject input, touch the microphone, or play audio: desktop actions go through the `actions::Executor` trait (tests use a recording executor).
+Host tests never inject input, touch the microphone, or play audio: desktop actions go through the `actions::Executor` trait (tests use a recording executor), the PC speaker uses `audio::capture::GeneratedSource`, and Claude, speech-to-text, text-to-speech and Bitfocus Companion are local test servers. Set `cfg.streamdeck.enabled = false` in e2e tests that do not need it (the default connects to 127.0.0.1:16622). whisper.cpp/Piper tests run only with `PSPC_WHISPER_BIN`+`PSPC_WHISPER_MODEL` / `PSPC_PIPER_BIN`+`PSPC_PIPER_VOICE`. Tagging `v*` triggers `.github/workflows/release.yml` (host exe + EBOOT to a GitHub Release).
 
 **AnyPSP** (`repos/anypsp`; GPL-2.0-or-later; `recomp/` = PSPRecomp f6e7d41 + psp-web-recomp patches, `runtime/` = psp-web-recomp host, provenance in `THIRD_PARTY.md`):
 
