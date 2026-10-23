@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Loader and analysis: PRX, relocations, NIDs, function discovery"
-status: in-progress
+status: completed
 effort: 4-6w
 dependsOn: [1]
 ---
