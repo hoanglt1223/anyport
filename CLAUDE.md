@@ -39,6 +39,8 @@ cd swf2c && cargo test && cargo clippy --all-targets -- -D warnings
 swf2c inspect game.swf  |  swf2c assets game.swf -o assets.bin
 anyswf-player assets.bin --screenshot f.png            # headless frame-1 render
 tests/render/run.sh <anyswf-player> [max-phase]        # render tests vs Ruffle references (PYTHON=... on Windows)
+swf2c compile game.swf -o <dir>                        # <dir>/game.c + assets.bin; build with cmake/anyswf-game.cmake
+python tests/avm1/run-avm1-tests.py --swf2c <swf2c> --out out/avm1 --corpus out/corpus [--ruffle <ruffle avm1 dir>] --generator "Visual Studio 17 2022"
 sh tests/fetch-mtasc.sh && sh tests/build-corpus.sh    # self-authored AS2 test SWFs
 sh scripts/psp-build.sh                                # PSP EBOOT via pspdev Docker image (needs Docker running)
 ```
@@ -69,6 +71,20 @@ python tests/feedback-pass.py <module> [--frames 300]  # analyze -> translate ->
 ```
 
 Runners are headless (no window, no audio). Pipeline and file formats: `repos/anypsp/docs/dev/loader-and-analysis.md`. The web/EGL build in `runtime/CMakeLists.txt` is upstream's and untested here. Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys). Write files from Python with `write_bytes`: `write_text` on Windows produces CRLF.
+
+**rpy2psp** (`repos/rpy2psp`; Python converter + C11 engine `vnpsp/`, platform layer vendored from AnySWF in `third_party/psp-platform/`):
+
+```
+pip install -r requirements.txt && python -m unittest discover -s tests -t .     # converter + engine tests
+python -m rpy2psp compile <game> -o <out> && python -m rpy2psp pack <game> -o <out> --font-dir <SDK fonts>
+cmake -S . -B out/msvc -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE=<python with requirements>
+cmake --build out/msvc --config Release && ctest --test-dir out/msvc -C Release --output-on-failure
+out/msvc/vnpsp/Release/vnpsp.exe <out> --play script.txt --trace t.txt [--fast] [--audio]   # headless scripted run
+out/msvc/vnpsp/Release/vnpsp.exe <out> --headless --frames 240   # platform smoke: hidden window, dummy audio
+sh scripts/psp-build.sh                                           # EBOOT via pspdev Docker image (needs Docker running)
+```
+
+Engine tests drive `vnpsp.exe` headless and compare each event with `tests/compiler/refvm.py`; never run `vnpsp.exe` without `--play` or `--headless` on this PC. Target-game tests need the games in `%TEMP%/rpy2psp-census/full` (or `RPY2PSP_TARGETS`) and cache converted data in `%TEMP%/vnpsp-targets`. Driver commands: top of `vnpsp/src/driver.c`; engine design: `docs/dev/engine.md`.
 
 A local hook blocks paths named `build`, so put build output in a scratch folder rather than `repos/*/build`.
 

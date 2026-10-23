@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "AVM1 ahead-of-time compiler"
-status: pending
+status: in-progress
 effort: 3-4w
 dependsOn: [2]
 ---
