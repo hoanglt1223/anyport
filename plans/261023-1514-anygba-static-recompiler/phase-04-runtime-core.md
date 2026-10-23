@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Runtime core: bus, scheduler, dispatch, fallback"
-status: pending
+status: completed
 effort: 2w
 dependsOn: [3]
 ---

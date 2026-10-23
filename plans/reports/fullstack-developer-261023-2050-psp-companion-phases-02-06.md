@@ -30,30 +30,146 @@ Status line: `in-progress` (the validation is a one-hour measurement on the real
   - The xchecks confirm the C layout and value parsers, LZ4, IDX8 images, UTF-8 handling, and font wrapping match the Rust side.
 - A simulated one hour of widget churn stays under 5 kbps (unit test).
 - `cargo clippy --workspace --all-targets`: 0 warnings. `cargo fmt --check`: clean.
-- **PSP C type check, not a PSP build**: every PSP-only file compiles cleanly with MSVC `/W4` against the real `refs/pspsdk` headers. Missing newlib socket headers were filled with minimal stubs. The harness lives in the scratchpad, not the repo.
+- **PSP C type check, not a PSP build**: every PSP-only file compiles without errors with MSVC `/W4` against the real `refs/pspsdk` headers. Missing newlib socket headers were filled with minimal stubs. The harness lives in the scratchpad, not the repo. See the phase 04 section for the warnings review.
 - Headless smoke run with a scratch config bound to 127.0.0.1: the host started, created `layout.toml`, answered `POST /notify` with 204, and exited after the timeout. No process was left, and the log folder it created was removed.
 
 ### Not verified
 - The PSP build (no Docker or WSL; `docker` is not on PATH) and all on-device behaviour: rendering, the cursor feel, and the one-hour traffic measurement.
 - The Windows executor, GSMTC now playing, and PDH GPU were never exercised live. The system sampler test does read real CPU and RAM.
 
-## Phases 04, 02, 06: not started
+## Phase 04 (PC speaker): host done, PSP code written, hardware validation pending
+
+Status line: `in-progress` (the validation is 30 minutes of music and a latency measurement on the PSP).
+
+### Built (commit f932bfe)
+- **`host/src/audio/encode_mp3.rs`**: LAME through `mp3lame-encoder`.
+  - Output is MPEG-1 Layer III at 44.1 kHz. The output rate is forced, because LAME otherwise drops to 32 kHz for 96 kbps stereo; a test caught this.
+  - CBR, with the bit reservoir disabled so frames decode independently.
+  - Also includes a frame splitter, a linear resampler, and a remixer.
+- **`host/src/audio/capture.rs`**: a `CaptureSource` trait. `LoopbackSource` uses cpal WASAPI loopback of the default or a named output device, on its own thread. `GeneratedSource` provides scripted tones and silence for tests and diagnostics.
+- **`host/src/audio/stream.rs`**:
+  - Pipeline with a silence gate (400 ms below -60 dBFS sends nothing; timestamps keep real time).
+  - One MP3 frame per UDP packet.
+  - Per-PSP manager: one stream at a time; voice preempts the speaker (Stop reason 2), and the speaker resumes after the reply has played out. The PSP can stop a stream; a capture failure does not restart in a loop.
+  - Voice is paced at most 300 ms ahead of real time.
+  - Config: `[audio] speaker_device`.
+- **Protocol**: PROTOCOL.md gained an "Audio streams" section.
+- **PSP**:
+  - `jitter.c` (portable): adaptive 150-250 ms buffer. It treats a pts jump with consecutive seq as host-side silence (no penalty) and a stall as an underrun (target grows); it shrinks after 30 s stable.
+  - `mp3_player.c`: sceAudiocodec MP3 with the context layout from PPSSPP `sceAudiocodec.h`, plus cache writeback and invalidate.
+  - `audio_stream.c`: player thread at priority 0x12; SRC channel at 44.1 kHz reserved only while a stream is active; concealment repeats the previous frame once at half volume, then plays silence.
+  - A UDP datagram hook in `net.c`, and a "PC speaker" screen (on/off, volume, buffer, loss stats).
+- README: PC speaker section, and the LAME (LGPL) and Unifont (OFL) notes.
+
+### Verified
+- Host unit tests:
+  - A 1 kHz stereo tone round-trips through an independent decoder (symphonia) at 96 kbps.
+  - Every frame has `main_data_begin == 0`; dropping every third frame still decodes.
+  - The resampler keeps pitch and length; the silence gate behaves; pipeline timestamps skip silence.
+- `host/tests/audio_e2e.rs` (localhost, generated signal, no audio device touched):
+  - Request leads to Start (44.1 kHz, 2 channels, 96 kbps), then consecutive packets.
+  - There is a pts gap of more than 900 ms over the silence, and no packets are sent during it.
+  - The tone decodes correctly. Wire rate while playing is 96-130 kbps.
+  - Disable leads to Stop (reason 1).
+  - Voice preempts the speaker (Stop reason 2, then a voice Start at mono 48 kbps). The first voice packet arrives within 300 ms of PCM handoff, and the voice audio decodes.
+  - When the reply ends: Stop (reason 0), then the speaker resumes. A PSP stop silences the stream with no reply.
+- `tools/xcheck/tests/audio_xcheck.rs`: the C jitter buffer fed real host MP3 frames.
+  - Jittery arrivals (0-120 ms) play in order with no loss and start after about 180 ms.
+  - Each lost packet produces exactly one LOST result.
+  - Host silence leaves the target alone; a 500 ms stall grows it.
+  - Duplicates, late packets, too-far-ahead packets, and non-frames are rejected.
+  - The audio message codecs work both ways.
+- `cargo test --workspace`, `cargo clippy --workspace --all-targets` (0 warnings), and `cargo fmt --check` all pass. The headless smoke run (127.0.0.1) also passes, with no process left behind.
+- PSP C type check with MSVC `/W4 -vv` against the pspsdk headers, all PSP files: no errors. The only warnings are host-ABI or MSVC-specific: 64-bit pointer casts in `mp3_player.c` (32-bit on the PSP), the `PSP_THREAD_ATTR_USER` sign constant (already present in phase-01 code), CRT deprecations, and one unreachable `return`.
+  - Correction to the phase 03 notes: those earlier checks proved only that there were no errors. Warnings from successful compiles appear only with `-vv`. This re-run covers all files.
+
+### Not verified
+- Live WASAPI loopback (never opened on this PC by design), the PSP build, Media Engine decoding on hardware, 30 minutes without dropouts, and end-to-end latency under 300 ms.
+- Latency budget estimate: 10 ms capture block, about 40 ms LAME delay, 26 ms frame, network, 180 ms jitter target, 26 ms output, roughly 280-300 ms in total. The real measurement needs the PSP.
+
+## Phase 02 (voice assistant): host done, PSP code written, live and hardware validation pending
+
+Status line: `in-progress`. The validation is 10 Vietnamese and 10 English questions on the PSP, with first audio within about 3 s.
+
+### Built (commit b84bb35)
+- **`host/src/voice/`**:
+  - `adpcm.rs`: self-contained IMA ADPCM chunks.
+  - `dsp.rs`: high-pass, noise gate, normalisation, a voiced-duration check, and WAV write/parse.
+  - `text.rs`: streaming sentence splitter, Vietnamese detection, speech cleanup.
+  - `claude.rs`: Messages API over reqwest/rustls. Uses `anthropic-version: 2023-06-01`, x-api-key header, SSE parser; handles text deltas, ping, the in-stream `error` event, and unknown event types. Errors become plain-words messages; the key is never in errors or Debug output.
+  - `stt.rs`: whisper.cpp CLI (`-l auto -nt -np`, 16 kHz WAV temp file, 60 s timeout, `kill_on_drop`) or an OpenAI-compatible transcription endpoint.
+  - `tts.rs`: Piper CLI (`--output_raw`, rate from `.onnx.json`, Vietnamese or English voice chosen by text) or an OpenAI-compatible speech endpoint (WAV).
+  - `session.rs`:
+    - Per-PSP recording with seq checks and a 60 s cap; a new utterance cancels the old reply.
+    - Silence is rejected before any API call.
+    - Sends the transcript, then reply text in 250 ms batches, and speaks sentence by sentence into the audio stream (preempting the speaker).
+    - Keeps per-PSP history (10 turns by default).
+    - Errors go out as non-fatal `Error` codes 2, 3, or 4.
+  - Config: `[voice]` with `.stt` and `.tts`. The default model is `claude-opus-5-5`; `claude-haiku-5-5` is documented as the low-latency option.
+- **Protocol**: PROTOCOL.md gained a "Voice assistant" section (chunk format, cap, message order, error codes).
+- **PSP**:
+  - `adpcm.c` (portable).
+  - `voice.c`: capture thread using `sceAudioInputBlocking` at 11025 Hz in 1024-sample blocks; queue; retry on a full send queue; 60 s cap; level meter.
+  - `text_view.c`: wrapped, scrollable conversation.
+  - Assistant screen: hold R; talking over a reply stops it; L+R stops speaking.
+  - `net.c` now forwards `Error` notices to the app.
+- README: voice assistant setup.
+
+### Verified
+- Host unit tests:
+  - ADPCM round trip and a hand-computed vector.
+  - DSP: DC removal, gating, normalisation, voiced duration.
+  - Sentence splitting (decimals, short fragments, newlines) and Vietnamese detection.
+  - SSE parsing across chunk boundaries; plain-words errors.
+  - Secrets redacted in Debug; config validation.
+  - STT/TTS config checks and a missing binary reported as "not configured".
+- `host/tests/voice_e2e.rs`, against local HTTP servers using the real wire formats:
+  - The Claude client sends the correct headers and body, streams 3 deltas into the full reply, and maps 429 and the in-stream `overloaded_error` correctly. The key never appears in errors or Debug output.
+  - The full push-to-talk exchange over the encrypted session, using the reference ADPCM chunks:
+    - Order: transcript, then reply text batches with a final flag, then voice Start, then at least 80 authenticated UDP voice packets, then Stop (reason 0).
+    - TTS was called per sentence: "Xin chào! Tôi là trợ lý giọng nói của bạn." and then "Bạn cần giúp gì?".
+    - The second question carries the history (user, assistant, user).
+    - A 429 reaches the PSP as `Error` code 3 in plain words.
+    - Silence is rejected before speech-to-text; a cancelled recording does nothing.
+  - The SSE fixtures (`host/tests/fixtures/*.sse`) were written from the documented event format, not recorded from a live API call (no key was available).
+- `tools/xcheck/tests/voice_xcheck.rs`: the C ADPCM encoder is byte-identical to the Rust reference, decodes on the host, and each chunk decodes independently; the voice message builders and parsers work both ways.
+- `cargo test --workspace`, `cargo clippy --workspace --all-targets` (0 warnings), and `cargo fmt --check` all pass. The headless smoke run shows the three "unavailable" notices and no key in the log.
+- PSP C type check (MSVC `/W4 -vv`): no errors; only the known MSVC-specific warning classes.
+
+### Not verified
+- **Live Claude smoke request**: `ANTHROPIC_API_KEY` is not set in this environment, so it was not run.
+- whisper.cpp and Piper: not installed. Their integration tests skip with a message, and the CLI argument choices (`-l auto -nt -np`, `--output_raw`) come from their documentation, not from a run.
+- The PSP microphone path (`sceAudioInputBlocking` at 11025 Hz; the input-init gain value is undocumented, as noted in phase 01), real-device latency, and the 20-question validation.
+
+## Phase 06: not started
 
 ## Environment
 - No Docker or WSL distro. `ANTHROPIC_API_KEY` is unset. whisper.cpp and Piper are not installed. `ffmpeg` is on PATH but unused.
 - A local hook blocks Bash commands containing `build` or `target` paths. Use `cargo run` rather than calling binaries under `target/`.
 
 ## Resume from here
-Next step: phase 04 (PC speaker).
-1. `host/src/audio/encode_mp3.rs`: wrap `mp3lame-encoder` (already proven to build on MSVC). Use MPEG-1 Layer III at 44.1 kHz, 96 kbps stereo for the speaker and 48 kbps mono for voice. Disable the bit reservoir (`lame_set_disable_reservoir` via `mp3lame_encoder::ffi`) so frames decode independently after loss. Add a linear resampler to 44.1 kHz.
-2. `host/src/audio/capture.rs`: a `PcmSource` trait, plus a WASAPI loopback implementation (cpal 0.18, input stream on the default output device) behind cfg(windows). Tests use generated PCM only.
-3. `host/src/audio/stream.rs`: packetizer (2 frames per packet, at most 1200 B, `seq`, `pts_ms`), a silence gate (no packets), real-time pacing, and a per-device stream manager. One stream at a time; voice preempts the speaker and the speaker resumes afterwards. Handle `AudioStreamRequest` and PSP `AudioStreamStop` in `app.rs`.
-4. Add the audio format and packet rules to PROTOCOL.md.
-5. PSP: `jitter.c` (portable, xcheck-tested; adaptive 150-250 ms target, loss concealment), `mp3_player.c` (sceAudiocodec MP3 with the codec buffer layout from PPSSPP `sceAudiocodec.h`; output is always stereo 1152 samples; sceAudioSRCChReserve at 44100), `audio_stream.c` (UDP intake from `net.c poll_udp`), a menu item to turn the speaker on or off, and volume on the PSP buttons.
-6. Then phase 02 (voice) and 06 (Stream Deck, Satellite API notes below), then `.github/workflows/release.yml`.
+Next step: phase 06 (Stream Deck mode).
+1. `host/src/streamdeck/satellite.rs`: a line-protocol codec and a TCP client for Companion.
+   - Parse `KEY=VALUE` and quoted values; `BEGIN` with an `ApiVersion` check (1.5 up to, not including, 2.0); `CAPS`.
+   - Register the device: `ADD-DEVICE DEVICEID=psp-<id> PRODUCT_NAME="PSP Companion" KEYS_TOTAL=18 KEYS_PER_ROW=6 BITMAPS=76 COLORS=false TEXT=false`, adding `CAN_CHANGE_PAGE` when the API is 1.10 or later.
+   - Handle `KEY-STATE` (base64 RGB `BITMAP`), `KEYS-CLEAR`, `BRIGHTNESS`, `LOCKED-STATE`, and `PING`/`PONG`. Send `PING` every 2 s and reconnect with back-off.
+2. `host/src/streamdeck/bridge.rs`:
+   - Per PSP session: on SessionUp send `DeckLayout` 6x3 at 76x76.
+   - Turn key bitmaps into IDX8-LZ4 (`imaging.rs`) with image ID cache tracking per session; send at most 5 key updates per second, coalesced per key.
+   - Map `DeckKeyPress` to `KEY-PRESS`, and page L/R to `CHANGE-PAGE`.
+   - Config: `[streamdeck] enabled, host, port 16622`.
+   - Fallback: when Companion is not reachable, the PSP uses the macro pad (already in phase 03).
+3. Tests: a fake Satellite server in `host/tests/streamdeck_e2e.rs`, built from the documented protocol.
+4. PSP:
+   - `streamdeck.c`: parse `DeckLayout` and `DeckKeyImage`, using `image.c` and a cache by `image_id`.
+   - 6x3 grid, D-pad or cursor selection, X press/release as separate events (long press), L/R pages.
+   - Add a menu item; add the deck codecs to `protocol.c` with xcheck tests.
+5. Add `.github/workflows/release.yml`: on tag `v*`, build the Windows host exe and the EBOOT (pspdev container) and attach both to a GitHub Release.
+
+PSP C type-check harness: `scratchpad/pspsyntax`. Run `PSP_FILES=a.c,b.c cargo check -vv` and read the warnings in the `-vv` output; without `-vv` only errors show.
 
 Satellite notes for phase 06 (from https://companion.free/for-developers/Satellite-API): TCP 16622, line protocol, BEGIN with ApiVersion then CAPS (1.10+). Use simple mode: `ADD-DEVICE DEVICEID=... PRODUCT_NAME=... KEYS_TOTAL=18 KEYS_PER_ROW=6 BITMAPS=76`. `KEY-STATE` carries a base64 RGB BITMAP; `KEY-PRESS DEVICEID KEY PRESSED`; `CHANGE-PAGE` needs 1.10 and `CAN_CHANGE_PAGE`. Send PING about every 2 s. Pin the supported range to ApiVersion 1.5 up to (not including) 2.0.
 
 Status: DONE_WITH_CONCERNS
-Summary: Phase 03 is committed, with the host fully tested and the PSP code type-checked against the pspsdk headers. Phases 04, 02, and 06 are still to do.
+Summary: Phases 03, 04 and 02 are committed, with the host fully tested and the PSP code type-checked against the pspsdk headers. Phase 06 and the release workflow remain.
 Concerns/Blockers: Docker is unavailable, so the EBOOT has not been built or run on hardware.

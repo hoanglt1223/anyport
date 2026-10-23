@@ -17,12 +17,16 @@ Build, test, and lint commands are defined in each plan's phase 01; add them bel
 **AnyGBA** (`repos/anygba`, CMake 3.28+, MSVC 14.44 on Windows):
 
 ```
+pwsh tests/fetch-corpus.ps1   |   sh tests/fetch-corpus.sh   # test ROM corpus, hash-checked, git-ignored; fetch before configuring
 cmake -S . -B <out> -G "Visual Studio 17 2022" -A x64 [-DANYGBA_WARNINGS_AS_ERRORS=ON]
 cmake --build <out> --config Release
-ctest --test-dir <out> -C Release                        # unit-tests + platform-smoke-headless
-<out>/.../unit-tests.exe -tc="<test case name>"          # single doctest case
+ctest --test-dir <out> -C Release [-LE slow]             # unit tests, recompiled jsmolka ROMs, smoke; `slow` = feedback-pass tests
+<out>/bin/Release/anygba-tests.exe -tc="<test case name>"  # single doctest case
+cmake --install <out> --config Release --prefix <prefix> # recompiler + runtime package (what release.yml ships)
+anygba-recomp game.gba --output <dir> [--config game.toml] [--miss-log anygba-miss.log] [--list]
+cmake --build <out> --config Release --target varooom-3d  # on-demand large generated program (also tonc-<demo>)
 platform-smoke --headless --frames 60 --scale 2          # never run it windowed: no audio/windows on this PC
-pwsh tests/fetch-corpus.ps1   |   sh tests/fetch-corpus.sh   # test ROM corpus, hash-checked, git-ignored
+<game> <rom> --headless [--pace] [--frames N] [--exit-on-idle]   # generated games: always --headless on this PC
 ```
 
 **AnySWF** (`repos/anyswf`; CMake + MSVC for the SDL/PC target, cargo for `swf2c`, Docker for PSP):
@@ -55,13 +59,16 @@ Host tests never inject input, touch the microphone, or play audio: desktop acti
 
 ```
 cmake -S . -B out/msvc -G "Visual Studio 17 2022" -A x64 && cmake --build out/msvc --config Release
-ctest --test-dir out/msvc -C Release                   # framework test (psprecomp_tests)
 python tests/fetch-corpus.py                           # pspautotests binaries, commit + SHA-256 pinned, git-ignored
-out/msvc/recomp/Release/psp_analyze.exe <ELF/PRX> out/reports/<name>.json
-out/msvc/recomp/Release/psp_recomp.exe <ELF/PRX> --auto <out dir>
+ctest --test-dir out/msvc -C Release                   # unit tests, framework test, corpus check (skips without corpus)
+out/msvc/Release/anypsp_tests.exe "<name part>"        # single unit test case(s)
+out/msvc/Release/anypsp-analyze.exe --out <dir> [--feedback f] EBOOT.BIN [MODULE.PRX...]
+out/msvc/recomp/Release/psp_recomp.exe <ELF/PRX> --auto <gen dir> --seeds <dir>/0_<module>_seeds.csv
+cmake -S . -B out/runners/<n> -DANYPSP_RUNNER_NAME=<n> -DANYPSP_RUNNER_GENERATED=<gen dir> [-DANYPSP_RUNNER_OPT=d]
+python tests/feedback-pass.py <module> [--frames 300]  # analyze -> translate -> headless run -> feedback loop
 ```
 
-`runtime/` does not build on Windows yet (Emscripten/Linux EGL only). Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys).
+Runners are headless (no window, no audio). Pipeline and file formats: `repos/anypsp/docs/dev/loader-and-analysis.md`. The web/EGL build in `runtime/CMakeLists.txt` is upstream's and untested here. Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys). Write files from Python with `write_bytes`: `write_text` on Windows produces CRLF.
 
 A local hook blocks paths named `build`, so put build output in a scratch folder rather than `repos/*/build`.
 

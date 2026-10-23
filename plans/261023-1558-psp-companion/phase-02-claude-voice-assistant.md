@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Claude voice assistant"
-status: pending
+status: in-progress
 effort: 2w
 dependsOn: [1]
 ---

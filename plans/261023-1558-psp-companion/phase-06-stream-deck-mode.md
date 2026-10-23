@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Stream Deck mode (Bitfocus Companion Satellite)"
-status: pending
+status: in-progress
 effort: 1w
 dependsOn: [3]
 ---

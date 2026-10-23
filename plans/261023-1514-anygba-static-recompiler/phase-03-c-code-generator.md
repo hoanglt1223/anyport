@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "C code generator"
-status: in-progress
+status: completed
 effort: 2-3w
 dependsOn: [2]
 ---
