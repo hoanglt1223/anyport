@@ -23,7 +23,7 @@ Because the game logic is already C source, a PSP port means:
 2. Writing a Fast3D backend that draws on the PSP GPU (GE), mapping the N64 color combiner onto GE texture functions.
 3. Fitting the game into ~52 MB of usable RAM and 2 MB of VRAM.
 
-No search found an existing PSP port of SF64, MK64 or OoT. Phase 01 confirms this before work starts and picks the game.
+**Update after phase 01 research:** Super Mario 64, Mario Kart 64, and Ocarina of Time already have native PSP ports, and Majora's Mask and Star Fox 64 are in progress (see `reports/researcher-261023-1741-n64-decomp-survey.md`). Decision: target **Paper Mario**, the only candidate without a PSP port, on route B (original decomp + slim C Fast3D), with our own renderer code (the widely copied sm64-port Fast3D files carry no license). Every working PSP port uses route B, so route A (libultraship) is dropped. Phase 01 measurements still need the user's own ROM.
 
 ## Outcome and acceptance criteria
 

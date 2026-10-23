@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "GameMaker 8 via OpenGMK (spike first)"
-status: pending
+status: cancelled
 effort: 2-6w
 dependsOn: [1]
 ---

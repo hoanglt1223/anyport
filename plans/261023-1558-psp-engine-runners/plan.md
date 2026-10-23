@@ -45,7 +45,7 @@ Each runner is a port of an existing open-source reimplementation to the PSP, do
 | 02 | [TIC-80 on PSP](phase-02-tic80.md) | 2-3w | 01 | pending |
 | 03 | [PICO-8 carts via fake-08](phase-03-fake08.md) | 2w | 01 | pending |
 | 04 | [LÖVE 11 via LövePotion](phase-04-love.md) | 3-4w | 01 | pending |
-| 05 | [GameMaker 8 via OpenGMK (spike first)](phase-05-gm8.md) | 2-6w | 01 | pending |
+| 05 | [GameMaker 8 via OpenGMK (spike first)](phase-05-gm8.md) | — | 01 | cancelled: rust-psp has no working std; see reports/researcher-261023-1741-engine-runners-prior-art.md |
 
 Phases 02-05 are independent and can run in parallel.
 
