@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "GE renderer and display list"
-status: pending
+status: in-progress
 effort: 3w
 dependsOn: [2]
 ---
@@ -37,6 +37,12 @@ Flash renders a tree of display objects every frame. On the PSP this becomes a w
 ## Validation
 
 - Ten animation-only test SWFs play at the correct frame rate on the PSP-3000 and match Ruffle frame captures within the diff threshold.
+
+Progress (2026-10-24):
+
+- PC: all 26 render tests pass against Ruffle references at every phase. This covers masks, colour transforms, and add, multiply and screen blending. On PC a blended object is drawn into an offscreen FBO layer and then composited. CI now runs the render tests at all phases.
+- PSP: `runtime/src/render/ge.c` implements `render.h`. It covers the 16-bit vertex scale in the model matrix, stencil masks in the framebuffer alpha byte, CLUT upload, the two-pass additive colour transform, and per-shape GE blend modes, because a GE layer cannot carry coverage. `scripts/psp-build.sh` builds `anyswf-player` to an EBOOT.
+- Still open, and the reason this phase stays `in-progress`: the PSP-3000 run of animation-only SWFs at the right frame rate. That needs a way to load assets.bin on the device, then a psplink test.
 
 ## Risks
 

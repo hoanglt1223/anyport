@@ -43,10 +43,12 @@ swf2c inspect game.swf  |  swf2c assets game.swf -o assets.bin
 anyswf-player assets.bin --screenshot f.png            # headless frame-1 render
 tests/render/run.sh <anyswf-player> [max-phase]        # render tests vs Ruffle references (PYTHON=... on Windows)
 swf2c compile game.swf -o <dir>                        # <dir>/game.c + assets.bin; build with cmake/anyswf-game.cmake
-python tests/avm1/run-avm1-tests.py --swf2c <swf2c> --out out/avm1 --corpus out/corpus [--ruffle <ruffle avm1 dir>] --generator "Visual Studio 17 2022"
+python tests/avm1/run-avm1-tests.py --swf2c <swf2c> --out out/avm1 --corpus out/corpus --generator "Visual Studio 17 2022" [--only ruffle_<name>]   # Ruffle tests default to tests/ruffle-avm1; gate: 100% corpus, >=80% Ruffle
 sh tests/fetch-mtasc.sh && sh tests/build-corpus.sh    # self-authored AS2 test SWFs
-sh scripts/psp-build.sh                                # PSP EBOOT via pspdev Docker image (needs Docker running)
+sh scripts/psp-build.sh                                # out/psp/apps/{hello,player}/EBOOT.PBP via pspdev Docker image (Docker Desktop must be running)
 ```
+
+AnySWF render backends: `runtime/src/render/gl.c` (PC; blend modes through FBO layers) and `ge.c` (PSP; per-shape GE blending, stencil = framebuffer alpha). Tagging `v*` triggers `.github/workflows/release.yml`.
 
 **PSP Companion** (`repos/psp-companion`; Rust host, C PSP client, spec in `protocol/PROTOCOL.md`):
 

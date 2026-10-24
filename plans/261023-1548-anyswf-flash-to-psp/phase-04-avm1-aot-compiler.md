@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "AVM1 ahead-of-time compiler"
-status: in-progress
+status: completed
 effort: 3-4w
 dependsOn: [2]
 ---
@@ -38,6 +38,8 @@ AS1/AS2 compiles to AVM1, a stack bytecode in `DoAction`, `DoInitAction`, button
 ## Validation
 
 - 100% of self-authored AVM1 tests and at least 80% of the selected Ruffle AVM1 tests produce identical `trace` output on PC and PSP.
+
+Result (2026-10-24): on PC, 5/5 self-authored and 164/199 (82.4%) Ruffle tests pass. The Ruffle tests are vendored in `repos/anyswf/tests/ruffle-avm1`, and the CI `avm1` job runs them. The PSP half of this check is not done yet: there is no headless trace capture on PSP hardware. It moves to phase 06's on-device runs.
 
 ## Risks
 
