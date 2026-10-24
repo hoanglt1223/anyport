@@ -101,6 +101,14 @@ sh scripts/psp-build.sh                                           # EBOOT via ps
 
 Engine tests drive `vnpsp.exe` headless and compare each event with `tests/compiler/refvm.py`; never run `vnpsp.exe` without `--play` or `--headless` on this PC. Target-game tests need the games in `%TEMP%/rpy2psp-census/full` (or `RPY2PSP_TARGETS`) and cache converted data in `%TEMP%/vnpsp-targets`. Driver commands: top of `vnpsp/src/driver.c`; engine design: `docs/dev/engine.md`.
 
+**PPSSPPHeadless** (EBOOT smoke tests; never run the windowed PPSSPP on this PC): build in Docker from a scratch clone of `refs/ppsspp` (`git submodule update --init --depth 1 -- ext ffmpeg`) on `debian:trixie` with `libsdl3-dev libsdl3-ttf-dev libfontconfig-dev libgl1-mesa-dev libegl-dev`, then `cmake -DHEADLESS=ON -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF` and `--target PPSSPPHeadless`. Run it in the same image (runtime libs only):
+
+```
+PPSSPPHeadless --memstick=<ms root> --timeout-emulated=15 --screenshot-at=8:a.png,15:b.png --press=5:0x4000:0.2 [--log] <ms root>/PSP/GAME/<Folder>/EBOOT.PBP
+```
+
+Pass the EBOOT as a host path (not `ms0:/`); button masks are pspctrl values (0x4000 = Cross).
+
 A local hook blocks paths named `build`, so put build output in a scratch folder rather than `repos/*/build`.
 
 ## Cross-project architecture decisions
