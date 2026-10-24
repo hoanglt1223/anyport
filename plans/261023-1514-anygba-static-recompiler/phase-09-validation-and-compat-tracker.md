@@ -54,5 +54,12 @@ Done: `--dump-frame-hash` in the game `main()` (no separate `headless.cpp`), `co
 on Windows (repo commits `eab35b6`, `e407071`). The interpreter-only run (`anygba-shot`) gives the
 same checkpoint picture for 40 of 41 titles; tonc `txt_se2` prints its own timing measurements.
 
-Open: step 4 needs the user's own commercial dump (no title is tracked yet); CI on Linux and macOS has
-not run because nothing is pushed.
+Step 4 (2026-10-24): Pokemon Emerald from the user's dump (`compat/pokemon-emerald.toml`, `rom_id`
+only) reaches `in-game` through `anygba build`: new game to player control, in-game save to the 128 KB
+Flash and CONTINUE after a restart. It does not reach `playable`: no mGBA picture comparison yet, no
+real-time clock, and the trace-feedback pass compiles code the game copies onto its stack, which goes
+stale and stops the game (builds skip feedback for now). Three tonc checkpoints were re-recorded after
+the reset fetch-cost fix (`8ff13ee`); two still match the interpreter, `txt_se2` as before does not.
+
+Open: Emerald to `playable` (the two blockers above); CI on Linux and macOS has not run because nothing
+is pushed.

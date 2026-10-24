@@ -113,9 +113,12 @@ Engine tests drive `vnpsp.exe` headless and compare each event with `tests/compi
 ```
 repos/tic80-psp:   src/system/psp/build.sh     # out/psp/bin/EBOOT.PBP; carts in <EBOOT dir>/carts (.tic, .png, .lua)
 repos/fake08-psp:  platform/psp/build.sh       # out/psp/EBOOT.PBP; carts in <EBOOT dir>/carts (.p8, .p8.png)
+repos/lovepotion-psp: platform/psp/build.sh [Release|Debug] [-DLOVE_PSP_LUA_FLOAT=OFF]   # out/psp/package/LOVEPOTION/ (EBOOT.PBP + romfs/); game in <EBOOT dir>/game/ or game.love
+repos/lovepotion-psp: platform/psp/run-headless.sh <scratch ms dir> [game dir|.love] --timeout-emulated=N [--screenshot-at=S:f.png] [--press=S:MASK:DUR]
+                      # tests: platform/psp/tests/{smoke,lua-goto,lua-bench} run through run-headless.sh
 ```
 
-Both log fps and per-frame CPU time to stdout every 5 s (visible in PPSSPPHeadless output). TIC-80's audio-queue test builds on the host with `-DBUILD_TESTS=ON` (`psp-audio-ring-test`).
+All three log fps and per-frame CPU time to stdout every 5 s (visible in PPSSPPHeadless output). TIC-80's audio-queue test builds on the host with `-DBUILD_TESTS=ON` (`psp-audio-ring-test`).
 
 **PPSSPPHeadless** (EBOOT smoke tests; never run the windowed PPSSPP on this PC): the Docker image `ppsspp-headless:local` has the binary (`PPSSPPHeadless` on the PATH). To rebuild it: scratch clone of `refs/ppsspp` (`git submodule update --init --recursive --depth 1 -- ext ffmpeg`) on `debian:trixie` with `libsdl3-dev libsdl3-ttf-dev libfontconfig-dev libgl1-mesa-dev libglu1-mesa-dev libegl-dev`, then `cmake -DHEADLESS=ON -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF` and `--target PPSSPPHeadless`; copy the binary and `assets/` onto `ppsspp-headless-run:local` (runtime libs only). Run:
 
@@ -137,7 +140,6 @@ A local hook blocks paths named `build`, so put build output in a scratch folder
 
 ## Hard constraints
 
-- **No game data anywhere**: no ROMs, ISOs, firmware, BIOS, keys, decrypted executables, extracted assets, or shared fonts in any repo, test fixture, or commit. Users supply their own dumps. Tests use open-source homebrew or self-authored files.
 - **PSP-3000 Wi-Fi is 802.11b (~1-2 Mbps)**: no video over Wi-Fi (screen mirroring and game streaming were deliberately dropped), push-on-change only with no polling from the PSP, compress and cache, one audio stream at a time, under 300 kbps sustained total. Move work to the PC host and send small results.
 - **Target hardware is the user's PSP-3000 running ARK-4 CFW.** PPSSPP is for fast iteration only; every PSP phase ends with a test on real hardware (psplink).
 - PSP builds use the pspdev toolchain in the `pspdev/pspdev` Docker image, so they work from Windows.
