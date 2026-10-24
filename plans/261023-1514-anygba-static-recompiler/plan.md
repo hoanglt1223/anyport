@@ -1,7 +1,7 @@
 ---
 title: "AnyGBA: static recompiler that turns GBA ROMs into native executables"
 description: "Recompile ARM7TDMI/Thumb code from a GBA ROM to C once, link it against an HLE runtime (BIOS, PPU, APU, I/O), and ship a native Windows/Linux/macOS executable with no emulator loop."
-status: pending
+status: in-progress
 priority: P2
 effort: 10-14w part-time
 branch: main
@@ -53,15 +53,15 @@ ROM ──► anygba-recomp (C++20)                       libanygba (C/C++20, SD
 
 | # | Phase | Effort | Depends on | Status |
 |---|---|---|---|---|
-| 01 | [Toolchain, repo, CI, test corpus](phase-01-toolchain-and-test-corpus.md) | 1w | none | pending |
-| 02 | [Decoder and function discovery](phase-02-decoder-and-function-discovery.md) | 2w | 01 | pending |
-| 03 | [C code generator](phase-03-c-code-generator.md) | 2-3w | 02 | pending |
-| 04 | [Runtime core: bus, scheduler, dispatch, fallback](phase-04-runtime-core.md) | 2w | 03 | pending |
-| 05 | [HLE BIOS](phase-05-hle-bios.md) | 1w | 04 | pending |
-| 06 | [PPU renderer](phase-06-ppu-renderer.md) | 2w | 04 | pending |
-| 07 | [APU](phase-07-apu.md) | 1w | 04 | pending |
-| 08 | [Saves, input, packaging, per-game config](phase-08-saves-input-packaging.md) | 1w | 05, 06, 07 | pending |
-| 09 | [Validation and compatibility tracker](phase-09-validation-and-compat-tracker.md) | 1-2w | 08 | pending |
+| 01 | [Toolchain, repo, CI, test corpus](phase-01-toolchain-and-test-corpus.md) | 1w | none | in-progress |
+| 02 | [Decoder and function discovery](phase-02-decoder-and-function-discovery.md) | 2w | 01 | completed |
+| 03 | [C code generator](phase-03-c-code-generator.md) | 2-3w | 02 | completed |
+| 04 | [Runtime core: bus, scheduler, dispatch, fallback](phase-04-runtime-core.md) | 2w | 03 | completed |
+| 05 | [HLE BIOS](phase-05-hle-bios.md) | 1w | 04 | completed |
+| 06 | [PPU renderer](phase-06-ppu-renderer.md) | 2w | 04 | completed |
+| 07 | [APU](phase-07-apu.md) | 1w | 04 | completed |
+| 08 | [Saves, input, packaging, per-game config](phase-08-saves-input-packaging.md) | 1w | 05, 06, 07 | completed |
+| 09 | [Validation and compatibility tracker](phase-09-validation-and-compat-tracker.md) | 1-2w | 08 | in-progress |
 
 Phases 05, 06 and 07 can run in parallel after 04 because they own separate runtime modules.
 

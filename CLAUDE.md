@@ -20,13 +20,17 @@ Build, test, and lint commands are defined in each plan's phase 01; add them bel
 pwsh tests/fetch-corpus.ps1   |   sh tests/fetch-corpus.sh   # test ROM corpus, hash-checked, git-ignored; fetch before configuring
 cmake -S . -B <out> -G "Visual Studio 17 2022" -A x64 [-DANYGBA_WARNINGS_AS_ERRORS=ON]
 cmake --build <out> --config Release
-ctest --test-dir <out> -C Release [-LE slow]             # unit tests, recompiled jsmolka ROMs, smoke; `slow` = feedback-pass tests
+ctest --test-dir <out> -C Release [-LE slow]             # unit tests, recompiled jsmolka ROMs (incl. saves), smoke; `slow` = feedback-pass and driver tests
+cmake -S . -B <out> -DANYGBA_COMPAT_TESTS=ON && ctest --test-dir <out> -C Release -L compat -j8   # compat/*.toml frame-hash checkpoints (builds ~40 games)
 <out>/bin/Release/anygba-tests.exe -tc="<test case name>"  # single doctest case
 cmake --install <out> --config Release --prefix <prefix> # recompiler + runtime package (what release.yml ships)
+anygba build game.gba [--config game.toml] [--miss-log F] -o <dir> [--prefix <install>]   # ROM -> <Title>.exe with the ROM embedded
 anygba-recomp game.gba --output <dir> [--config game.toml] [--miss-log anygba-miss.log] [--list]
 cmake --build <out> --config Release --target varooom-3d  # on-demand large generated program (also tonc-<demo>)
 platform-smoke --headless --frames 60 --scale 2          # never run it windowed: no audio/windows on this PC
-<game> <rom> --headless [--pace] [--frames N] [--exit-on-idle]   # generated games: always --headless on this PC
+<game> [rom] --headless [--frames N] [--exit-on-idle] [--dump-frame-hash] [--save-dir D | --no-save]   # generated games: always --headless on this PC; pass --save-dir/--no-save in tests
+python tools/compat-site/generate.py [--out dir]           # compat/*.toml -> progress.html + badges
+sh tests/build-tonc-elves.sh <dir>                       # tonc demos + ELFs via devkitARM Docker (discovery ground truth: ANYGBA_ELF_DIR=<dir>/code)
 <out>/bin/Release/anygba-shot.exe rom.gba --frames N [--shot F:x.png] [--hash F] [--wav x.wav] [--keys a:10-20] [--dump vram:x.bin]  # interpreter-only headless run
 python tests/oracle/mgba-oracle.py --core mgba_libretro.dll rom.gba --frames N [same options]   # mGBA reference (build: tests/oracle/README.md)
 python tests/oracle/make-{bios-reference,ppu-goldens,apu-references}.py --core ...   # regenerate committed references
@@ -69,12 +73,15 @@ cmake -S . -B out/msvc -G "Visual Studio 17 2022" -A x64 && cmake --build out/ms
 python tests/fetch-corpus.py                           # pspautotests binaries, commit + SHA-256 pinned, git-ignored
 ctest --test-dir out/msvc -C Release                   # unit tests, framework test, corpus check (skips without corpus)
 out/msvc/Release/anypsp_tests.exe "<name part>"        # single unit test case(s)
+out/msvc/Release/anypsp_hle_tests.exe "<name part>"    # HLE functions called directly (no guest program)
 out/msvc/Release/anypsp-analyze.exe --out <dir> [--feedback f] EBOOT.BIN [MODULE.PRX...]
 out/msvc/recomp/Release/psp_recomp.exe <ELF/PRX> --auto <gen dir> --seeds <dir>/0_<module>_seeds.csv
 cmake -S . -B out/runners/<n> -DANYPSP_RUNNER_NAME=<n> -DANYPSP_RUNNER_GENERATED=<gen dir> [-DANYPSP_RUNNER_OPT=d]
 python tests/feedback-pass.py <module> [--frames 300]  # analyze -> translate -> headless run -> feedback loop
 out/msvc/Release/anypsp-interp.exe <module> [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--dump-at f,...] [--hle-stubs file]
-                                                       # interpreter-only runner (no translation, seconds to start)
+                                                       # interpreter-only runner (no translation, seconds to start);
+                                                       # prints imports without HLE at start; --dump-at writes frameN.ppm
+                                                       # to the cwd, so run games from a scratch folder, never the repo
 python tests/conformance.py [cpu/...] [--runner exe]   # pspautotests output vs .expected (default runner: anypsp-interp)
 python tests/translated-conformance.py [cpu/...]        # same, through psp_recomp-translated runners (one shared build tree)
 out/msvc/Release/anypsp_cpu_difftest.exe               # generated code vs reference interpreter, random states (ctest cpu_difftest)

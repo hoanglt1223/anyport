@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "Saves, input, packaging, per-game config"
-status: pending
+status: completed
 effort: 1w
 dependsOn: [5, 6, 7]
 ---
@@ -47,3 +47,11 @@ This phase turns a working recompile into a usable native game: persistent saves
 ## Rollback
 
 Revert modules; saves are user files and never deleted by the tool.
+
+## Implementation status
+
+Done (repo commits `ac4837b`, `485bc41`). Deviations: the ROM is appended to the executable (Windows,
+Linux) or placed in `Contents/Resources` (macOS) instead of compiled in, because a C array of a 32 MB
+ROM is impractical for MSVC; `[[replace]]` patches call a C function from `game.sources`. Verified on
+Windows only (save tests twice per save type, `driver-build` test); Linux and macOS run in CI once
+pushed, and the `.app` bundle has never run on a Mac.

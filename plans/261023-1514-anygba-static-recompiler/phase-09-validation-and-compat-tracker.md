@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Validation and compatibility tracker"
-status: pending
+status: in-progress
 effort: 1-2w
 dependsOn: [8]
 ---
@@ -45,3 +45,14 @@ Prove the pipeline end to end and publish progress the way AnyPS5 does (badges a
 ## Rollback
 
 CI and docs only; revert.
+
+## Implementation status
+
+Done: `--dump-frame-hash` in the game `main()` (no separate `headless.cpp`), `compat/` with 49 titles and
+`schema.md`, checkpoint tests (`ANYGBA_COMPAT_TESTS=ON`, `ctest -L compat`), `tools/compat-site/generate.py`,
+`pages.yml`, a compat job on three hosts in `ci.yml`, and `docs/dev/RETRO.md`. All 41 checkpoints pass
+on Windows (repo commits `eab35b6`, `e407071`). The interpreter-only run (`anygba-shot`) gives the
+same checkpoint picture for 40 of 41 titles; tonc `txt_se2` prints its own timing measurements.
+
+Open: step 4 needs the user's own commercial dump (no title is tracked yet); CI on Linux and macOS has
+not run because nothing is pushed.
