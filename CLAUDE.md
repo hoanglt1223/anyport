@@ -78,8 +78,9 @@ out/msvc/Release/anypsp-interp.exe <module> [--disc dir] [--guest-path disc0:/..
 python tests/conformance.py [cpu/...] [--runner exe]   # pspautotests output vs .expected (default runner: anypsp-interp)
 python tests/translated-conformance.py [cpu/...]        # same, through psp_recomp-translated runners (one shared build tree)
 out/msvc/Release/anypsp_cpu_difftest.exe               # generated code vs reference interpreter, random states (ctest cpu_difftest)
-out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|soft] [--scale n] [--frames-dir d] [--hashes f] [--screenshot f.png]
-python tests/ge-screenshots.py [--renderer gl|soft] [filter]  # pspautotests GE tests vs PPSSPP reference screenshots (MSE)
+out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|soft] [--scale n] [--frames-dir d] [--png-every n] [--hashes f] [--screenshot f.png]
+                                                       # [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--hle-stubs file] as anypsp-interp
+python tests/ge-screenshots.py [--runner exe] [--renderer gl|soft] [filter]  # pspautotests GE tests vs PPSSPP reference screenshots (MSE)
 ```
 
 GE renderer: desktop OpenGL 3.3 core via SDL3 (fetched by CMake; `-DANYPSP_BUILD_GPU=OFF` skips it) on a hidden window that is never shown; frames go to PNG files and per-frame hashes. `anypsp-run-<name>-gpu` is built next to each per-game runner. Code: `runtime/gpu/`, `runtime/host/ge*.{cpp,hpp}`.
