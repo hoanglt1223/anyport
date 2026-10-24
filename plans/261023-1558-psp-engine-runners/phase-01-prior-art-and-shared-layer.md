@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Prior-art check and shared PSP layer"
-status: in-progress
+status: completed
 effort: 1w
 dependsOn: []
 ---
@@ -35,3 +35,17 @@ Avoid duplicating existing PSP ports, and avoid four copies of the same PSP setu
 ## Rollback
 
 Research and library extraction only.
+
+## Status notes (2026-10-24)
+
+- Gate met: per-runner decisions are in `plans/reports/researcher-261023-1741-engine-runners-prior-art.md`
+  (TIC-80 go, fake-08 go, LövePotion go as a long-lived fork, GM8 no-go).
+- `psp-platform` is not a separate library repo. Each fork vendors the AnySWF layer unmodified with a
+  `VENDORED.md` that records the AnySWF commit (`src/system/psp/platform/` in TIC-80,
+  `platform/psp/psp-platform/` in fake-08), the same way rpy2psp does. A fork has to build on its own for
+  an upstream PR, which rules out a cross-repo dependency.
+- No shared game browser: TIC-80 uses a browser written as a TIC-80 cart, fake-08 keeps its own BIOS
+  menu, and LövePotion has its own no-game screen. A common C browser would need a font and UI that
+  every runner already has.
+- `docs/dev/prior-art.md` was not created: the research report holds it, and an extra docs file would
+  have to be dropped from each upstream PR. Details: `plans/reports/fullstack-developer-261024-1741-engine-runners.md`.

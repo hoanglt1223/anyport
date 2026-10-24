@@ -108,13 +108,22 @@ sh scripts/psp-build.sh                                           # EBOOT via ps
 
 Engine tests drive `vnpsp.exe` headless and compare each event with `tests/compiler/refvm.py`; never run `vnpsp.exe` without `--play` or `--headless` on this PC. Target-game tests need the games in `%TEMP%/rpy2psp-census/full` (or `RPY2PSP_TARGETS`) and cache converted data in `%TEMP%/vnpsp-targets`. Driver commands: top of `vnpsp/src/driver.c`; engine design: `docs/dev/engine.md`.
 
-**PPSSPPHeadless** (EBOOT smoke tests; never run the windowed PPSSPP on this PC): build in Docker from a scratch clone of `refs/ppsspp` (`git submodule update --init --depth 1 -- ext ffmpeg`) on `debian:trixie` with `libsdl3-dev libsdl3-ttf-dev libfontconfig-dev libgl1-mesa-dev libegl-dev`, then `cmake -DHEADLESS=ON -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF` and `--target PPSSPPHeadless`. Run it in the same image (runtime libs only):
+**Engine runners** (forks of upstream, branch `psp`, PSP-only builds through the pspdev Docker image; init the submodules each README lists first):
 
 ```
-PPSSPPHeadless --memstick=<ms root> --timeout-emulated=15 --screenshot-at=8:a.png,15:b.png --press=5:0x4000:0.2 [--log] <ms root>/PSP/GAME/<Folder>/EBOOT.PBP
+repos/tic80-psp:   src/system/psp/build.sh     # out/psp/bin/EBOOT.PBP; carts in <EBOOT dir>/carts (.tic, .png, .lua)
+repos/fake08-psp:  platform/psp/build.sh       # out/psp/EBOOT.PBP; carts in <EBOOT dir>/carts (.p8, .p8.png)
 ```
 
-Pass the EBOOT as a host path (not `ms0:/`); button masks are pspctrl values (0x4000 = Cross).
+Both log fps and per-frame CPU time to stdout every 5 s (visible in PPSSPPHeadless output). TIC-80's audio-queue test builds on the host with `-DBUILD_TESTS=ON` (`psp-audio-ring-test`).
+
+**PPSSPPHeadless** (EBOOT smoke tests; never run the windowed PPSSPP on this PC): the Docker image `ppsspp-headless:local` has the binary (`PPSSPPHeadless` on the PATH). To rebuild it: scratch clone of `refs/ppsspp` (`git submodule update --init --recursive --depth 1 -- ext ffmpeg`) on `debian:trixie` with `libsdl3-dev libsdl3-ttf-dev libfontconfig-dev libgl1-mesa-dev libglu1-mesa-dev libegl-dev`, then `cmake -DHEADLESS=ON -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF` and `--target PPSSPPHeadless`; copy the binary and `assets/` onto `ppsspp-headless-run:local` (runtime libs only). Run:
+
+```
+PPSSPPHeadless --memstick=<ms root> --timeout-emulated=15 --screenshot-at=8:a.png,15:b.png --press=5:0x4000:0.2,6:0x40:0.1 [--log] <ms root>/PSP/GAME/<Folder>/EBOOT.PBP
+```
+
+Pass the EBOOT as a host path (not `ms0:/`); button masks are pspctrl values (0x4000 = Cross, 0x40 = Down, 0x20 = Right); `--press` takes a comma-separated list. Screenshots are written relative to the working directory. PPSSPP returns 8.3 file names in upper case (`GAME.P8`), and FAT on the PSP likely does too, so match extensions case-insensitively.
 
 A local hook blocks paths named `build`, so put build output in a scratch folder rather than `repos/*/build`.
 

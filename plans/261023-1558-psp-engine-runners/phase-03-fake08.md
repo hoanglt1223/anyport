@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "PICO-8 carts via fake-08"
-status: pending
+status: in-progress
 effort: 2w
 dependsOn: [1]
 ---
@@ -27,3 +27,18 @@ dependsOn: [1]
 ## Risks
 
 - PNG cart decoding speed on PSP. Cache decoded carts on first load.
+
+## Status notes (2026-10-24)
+
+- Fork: `repos/fake08-psp`, branch `psp` (upstream jtothebell/fake-08 at 814991a). Build:
+  `platform/psp/build.sh` (pspdev Docker, applies `z8lua-psp-int-types.patch` to the submodule), EBOOT at
+  `out/psp/EBOOT.PBP`. Not pushed.
+- Done: PSP host on the shared layer, T4 texture plus 16-entry CLUT drawn at 2x (draw modes, flips and
+  rotations included), 22050 Hz synth doubled to 44.1 kHz, carts from `<EBOOT dir>/carts`, cartdata and
+  settings under `ms0:/PSP/SAVEDATA/FAKE08/`, L+R quit, fps log every 5 s.
+- Input: Cross/Triangle are PICO-8 X (the menu runs carts with X, as on Vita), Circle/Square are O. The
+  plan's "by setting" choice and the stretched mode are not done.
+- PPSSPPHeadless: BIOS menu, `ld45.p8` (in the upstream repo) and a self-authored stress cart (120
+  circles, 32 lines) run at 60 fps; stress uses 12 ms of a 16.7 ms frame.
+- Open: 20 popular free carts on the PSP-3000 and comparison with Frog08, `.p8.png` load speed. Details:
+  `plans/reports/fullstack-developer-261024-1741-engine-runners.md`.

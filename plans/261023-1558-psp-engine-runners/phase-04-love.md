@@ -27,3 +27,13 @@ dependsOn: [1]
 ## Risks
 
 - Lua memory use on big games. Use a tuned allocator and report heap use on screen in debug builds.
+
+## Status notes (2026-10-24)
+
+- Fork cloned to `repos/lovepotion-psp`, local branch `psp` based on `origin/3.1.0-development` (666f626,
+  2026-10-20): the active rewrite, LÖVE 12 API, platform code under `platform/<name>/` (3DS: about 5k
+  lines). No PSP code yet.
+- Porting surface found: graphics backend (Graphics, Texture, Buffer, StreamBuffer, Shader stubs, Font),
+  a software mixer for the voice-based audio driver, joystick/keyboard/system/timer/window, boot. Lua 5.1
+  is not in pspdev (it ships 5.4), so the fork has to build Lua 5.1 itself, with float numbers. Box2D in
+  pspdev is v3; the 3.1 branch has no love.physics. Details: `plans/reports/fullstack-developer-261024-1741-engine-runners.md`.
