@@ -87,6 +87,7 @@ python tests/translated-conformance.py [cpu/...]        # same, through psp_reco
 out/msvc/Release/anypsp_cpu_difftest.exe               # generated code vs reference interpreter, random states (ctest cpu_difftest)
 out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|soft] [--scale n] [--frames-dir d] [--png-every n] [--hashes f] [--screenshot f.png]
                                                        # [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--hle-stubs file] as anypsp-interp
+                                                       # [--coherent lazy|1|0] (lazy default; 1 = readback per list, debug) [--deterministic] (repeatable scripted runs)
 python tests/ge-screenshots.py [--runner exe] [--renderer gl|soft] [filter]  # pspautotests GE tests vs PPSSPP reference screenshots (MSE)
 ```
 
