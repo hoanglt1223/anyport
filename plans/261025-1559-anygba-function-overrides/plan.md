@@ -50,7 +50,9 @@ MP2K sound; Fire Emblem GBA), so one rewrite serves several games.
 - Full or byte-matching decompilation of any game.
 - Shipping decompiled or recompiled game code, symbols derived from ROM data, or assets publicly.
 - Live (per-frame) LLM use; the LLM is only an offline authoring aid.
-- Changing the recompiler's default output for games without overrides.
+- Changing the recompiler's default output for games without overrides. Exception (accepted
+  2026-10-25): resolving agbcc's `cmp; bls table` switch, a correctness fix that phase 05 needed for
+  RenderText; compat checkpoints and Emerald's frames are unchanged.
 
 ## Constraints
 
@@ -80,7 +82,7 @@ anygba decomp: Ghidra headless ─► pseudo-C + types ─► LLM rewrite ─►
 | 02 | [Override layer: config, codegen, guest API](phase-02-override-layer.md) | 1.5-2w | 01 | completed |
 | 03 | [Differential verification harness](phase-03-differential-verification.md) | 1-1.5w | 02 | completed |
 | 04 | [AI-assisted decomp tool (Ghidra + LLM)](phase-04-ai-decomp-tool.md) | 1.5-2w | 03 | completed |
-| 05 | [Gen 3 text printer override, Emerald and FireRed](phase-05-gen3-text-printer.md) | 1-1.5w | 04 | pending |
+| 05 | [Gen 3 text printer override, Emerald and FireRed](phase-05-gen3-text-printer.md) | 1-1.5w | 04 | in-progress |
 
 Phase 01 is a gate: later phases start only after its exit criteria are recorded in the phase file.
 
