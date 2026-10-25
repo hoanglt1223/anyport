@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Build, test, and lint commands are defined in each plan's phase 01; add them below as each repo gains them.
 
+**Linux box** (Ubuntu 24.04, 16 cores, 47 GB; prepared by `scripts/setup-linux.sh`; games in `~/games/{gba,psp}`): configure with `-G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++` instead of the Visual Studio generator (binaries land in `<out>/` without `.exe` or `Release/`). There is no display: prefix GL programs with `SDL_VIDEO_DRIVER=offscreen` (Mesa llvmpipe) and keep them `--headless`. Push with the `hoanglt1223` token through a one-off credential helper; never switch the active gh account.
+
 ## Commands
 
 **AnyGBA** (`repos/anygba`, CMake 3.28+, MSVC 14.44 on Windows):
