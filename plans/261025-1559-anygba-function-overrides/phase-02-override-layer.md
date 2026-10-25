@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Override layer: config, codegen, guest API"
-status: pending
+status: completed
 effort: 1.5-2w
 dependsOn: [1]
 ---
@@ -49,3 +49,33 @@ Turn the spike into a supported feature that any game can use, chosen by the pha
 ## Risks and rollback
 
 - Feature is off unless configured; revert the codegen routing commit to restore previous output.
+
+### Results (2026-10-25, worktree `repos/anygba-overrides`, uncommitted on top of the spike commit aec3eb9)
+
+Built on `[[replace]]` as the gate decided; no trampoline. Schema, guest API and rules: `docs/dev/OVERRIDES.md`.
+
+- Config: `[[override]]` (`addr`+`mode` or `symbol`, `impl`, `enabled`, `engine`) in game configs and in module
+  `overrides.toml`; `[functions]` tables (game config, `--symbols FILE`, and with `anygba build` the shipped
+  `share/anygba/symbols/<code>.toml`; `compat/symbols/BPEE.toml` now names `StringCopy`). Errors name file and line.
+- Codegen: an overridden function keeps its translation as `f_X_orig`; `f_X` checks `ag_override_on[k]` and calls
+  `anygba_override_run`. Games without overrides get unchanged generated code (no `.cpp` glob, no table).
+- Runtime: name registry (`ANYGBA_OVERRIDE`), startup check that fails on unknown or duplicate implementations,
+  `--overrides on|off|all`, active list printed at start (`override: ...`), OSD sink. Guest API in
+  `runtime/include/anygba/override.hpp`: registers, flags, typed memory, `block()` cycle accounting, `call()`,
+  `run_original()`, `ret()`/`ret_to()`, `osd()`, `from_recompiled_code()`.
+- Packaging: `anygba build --overrides DIR` and `anygba-recomp --overrides DIR --symbols FILE` (repeatable); C++20
+  sources compiled into the game (also the Android build); modules installed to `share/anygba/overrides/`.
+- Example module `overrides/pokemon-gen3/` (StringCopy ported to the guest API, no ROM data).
+- Not done: a window text layer hook (no text layer exists on this branch yet; phase 05 adds it with the hook)
+  and HD sprite lookup; the menu does not list overrides (would touch the menu model, view and tests).
+
+Validation:
+
+- `ctest -LE slow`: 22/22 pass, including the new unit tests (`tests/recomp/override_config_tests.cpp`,
+  `tests/runtime/override_tests.cpp`) and `override-e2e`: tonc irq_demo with `tests/overrides/call-paths` reaches
+  one override by `bl` from recompiled code, one by `bx` from recompiled isr_master (indirect) and one by `bl` from
+  interpreted code; `--overrides off` reaches none; frame 600 hash identical on and off.
+- Compat checkpoints with no overrides: all 41 compat/*.toml checkpoints with corpus ROMs pass (full set, -DANYGBA_COMPAT_TESTS=ON); the slow driver-build test passes.
+- Emerald (save state copy, Bag-menu key script, `--no-save`, scratch data dir): frame hashes at 164095, 164245,
+  164395 and 164545 identical with `--overrides on` and `off`, EWRAM and VRAM at 164545 identical; a counting copy of
+  the module (scratch only) saw 9 calls, all from recompiled code. Evidence: `%TEMP%/ovr-emerald/ab.log`.
