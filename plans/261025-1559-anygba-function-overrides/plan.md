@@ -78,7 +78,7 @@ anygba decomp: Ghidra headless ─► pseudo-C + types ─► LLM rewrite ─►
 |---|---|---|---|---|
 | 01 | [Spike: one override end to end (gate)](phase-01-spike-override-gate.md) | 1w | none | completed |
 | 02 | [Override layer: config, codegen, guest API](phase-02-override-layer.md) | 1.5-2w | 01 | completed |
-| 03 | [Differential verification harness](phase-03-differential-verification.md) | 1-1.5w | 02 | pending |
+| 03 | [Differential verification harness](phase-03-differential-verification.md) | 1-1.5w | 02 | completed |
 | 04 | [AI-assisted decomp tool (Ghidra + LLM)](phase-04-ai-decomp-tool.md) | 1.5-2w | 03 | pending |
 | 05 | [Gen 3 text printer override, Emerald and FireRed](phase-05-gen3-text-printer.md) | 1-1.5w | 04 | pending |
 
