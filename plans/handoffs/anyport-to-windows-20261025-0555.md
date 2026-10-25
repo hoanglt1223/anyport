@@ -8,7 +8,7 @@ supersedes: plans/handoffs/anyport-night-20261025-0150.md, plans/handoffs/anypor
 
 # Handoff: Linux session -> Windows PC
 
-Everything is pushed. Pull first: the workspace (`git pull`), `repos/anygba` (main ae90434) and `repos/anypsp` (main b1c7af5). The other repos did not change. Rules: CLAUDE.md (now with a "Linux box" paragraph and AnyPSP `--cheats`/`--dialogs`), memory `act-without-asking` (also: make small design calls yourself, state them in one line).
+Everything is pushed. Pull first: the workspace (`git pull`), `repos/anygba` (main 93fa1f8) and `repos/anypsp` (main b1c7af5). The other repos did not change. Rules: CLAUDE.md (now with a "Linux box" paragraph and AnyPSP `--cheats`/`--dialogs`), memory `act-without-asking` (also: make small design calls yourself, state them in one line).
 
 Caution from the night handoff: the Windows PC had an uncommitted sceCtrl rewrite in repos/anypsp (devices.cpp, kernel.*, hle_tests.cpp). It was redone and pushed from Linux as 6303975. Discard the Windows copy (`git checkout -- runtime tests` after checking `git status`), or the pull will conflict. Engine runner repos (tic80-psp, fake08-psp, lovepotion-psp) exist only on Windows and are untouched.
 
@@ -36,7 +36,7 @@ Caution from the night handoff: the Windows PC had an uncommitted sceCtrl rewrit
    - Load Game with an empty memstick shows "There is no data."; save in Naruto's House shows the save list; keyboard, gamepad, mouse and touch on the dialogs.
    - Video tab: preset row, divider drag, loupe (Select, mouse), descriptions in vi/en.
    - Cheats tab with a PPSSPP cheat file for ULUS-10299 (no cheat file ships; a public UNH 1 code or the user's own).
-   - AnyGBA Emerald (`D:\Games\anygba\out7`): rebuild from main for the presets/preview, check the Video tab, set the filter to xbrz4x if the user agrees.
+   - AnyGBA Emerald (`D:\Games\anygba\out7`): rebuild from main (93fa1f8) WITHOUT --config: the shipped configs/BPEE.toml now makes xbrz4x the default filter (user decided). A saved `<game>.video` from earlier menu choices still overrides it; delete it or pick xbrz4x in the menu. Check the Video tab presets/preview.
 3. Build the UNH 1 translated runner with everything above, one compiler job at a time (MSVC OOMs otherwise): configure `out/runners/unh1-menu` from current main, `cmake --build ... --target anypsp-run-unh1-gpu -- -m:1`. Then remove the old worktree `repos/anypsp-menu-merge` and branches `merge/menu-redesign`, `feat/menu-redesign`.
 4. APK: rebuild on Windows with its debug key (same package id `io.anyport.anygba.ga9dec84dfe7f`) so it updates the phone in place, put it in OneDrive My Games\AnyGBA\android\. Or copy `%USERPROFILE%\.android\debug.keystore` to the Linux box's ~/.android/ and rebuild there.
 5. Engine runners (tic80-psp, fake08-psp, lovepotion-psp): forking/pushing is public, ask the user first; then they can be continued on Linux too.
