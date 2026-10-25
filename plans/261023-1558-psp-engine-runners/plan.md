@@ -1,7 +1,7 @@
 ---
 title: "PSP engine runners: TIC-80, PICO-8 (fake-08), modern LÖVE, GameMaker 8"
 description: "Bring four game-engine runners to the PSP-3000 by porting existing open-source reimplementations, so whole libraries of small games run on it unmodified."
-status: pending
+status: in-progress
 priority: P3
 effort: 10-16w part-time (all four)
 branch: main
@@ -41,10 +41,10 @@ Each runner is a port of an existing open-source reimplementation to the PSP, do
 
 | # | Phase | Effort | Depends on | Status |
 |---|---|---|---|---|
-| 01 | [Prior-art check and shared PSP layer](phase-01-prior-art-and-shared-layer.md) | 1w | AnySWF phase 01 | pending |
-| 02 | [TIC-80 on PSP](phase-02-tic80.md) | 2-3w | 01 | pending |
-| 03 | [PICO-8 carts via fake-08](phase-03-fake08.md) | 2w | 01 | pending |
-| 04 | [LÖVE 11 via LövePotion](phase-04-love.md) | 3-4w | 01 | pending |
+| 01 | [Prior-art check and shared PSP layer](phase-01-prior-art-and-shared-layer.md) | 1w | AnySWF phase 01 | completed |
+| 02 | [TIC-80 on PSP](phase-02-tic80.md) | 2-3w | 01 | in-progress |
+| 03 | [PICO-8 carts via fake-08](phase-03-fake08.md) | 2w | 01 | in-progress |
+| 04 | [LÖVE 11 via LövePotion](phase-04-love.md) | 3-4w | 01 | in-progress |
 | 05 | [GameMaker 8 via OpenGMK (spike first)](phase-05-gm8.md) | — | 01 | cancelled: rust-psp has no working std; see reports/researcher-261023-1741-engine-runners-prior-art.md |
 
 Phases 02-05 are independent and can run in parallel.

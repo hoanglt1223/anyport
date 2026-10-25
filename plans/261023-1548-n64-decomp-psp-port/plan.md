@@ -1,7 +1,7 @@
 ---
 title: "Port an N64 decompilation project natively to the PSP-3000"
 description: "Take a completed N64 decompilation (or its PC port), replace the N64 OS and graphics layer with a PSP backend, and ship a native EBOOT that extracts assets from the user's own ROM."
-status: pending
+status: in-progress
 priority: P2
 effort: 10-16w part-time
 branch: main
@@ -45,7 +45,7 @@ One repo per game, as a fork of the chosen upstream (decomp or PC port). That ke
 
 | # | Phase | Effort | Depends on | Status |
 |---|---|---|---|---|
-| 01 | [Prior-art check, game choice, and route spike](phase-01-survey-and-route-spike.md) | 2w | none | pending |
+| 01 | [Prior-art check, game choice, and route spike](phase-01-survey-and-route-spike.md) | 2w | none | in-progress (survey done; measurements and spike need a Paper Mario ROM and the PSP-3000) |
 | 02 | [PSP platform shim for libultra](phase-02-libultra-psp-shim.md) | 2-3w | 01 | pending |
 | 03 | [Fast3D GE renderer backend](phase-03-fast3d-ge-backend.md) | 3-4w | 02 | pending |
 | 04 | [Audio](phase-04-audio.md) | 1-2w | 02 | pending |
