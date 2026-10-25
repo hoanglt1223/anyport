@@ -81,3 +81,26 @@ Validation:
   About 7 s per 10,000 states. `overrides/pokemon-gen3/overrides.toml` now has `verified = true` from that run.
 - Not run: the 41 compat checkpoints (games without overrides get unchanged generated code; a unit test checks that
   only overridden translations get counters) and the slow tests.
+
+### Gate update: normal returns (2026-10-25, user decision)
+
+States where both sides time out or stop the same way passed the ABI comparison but prove little (569 of the
+first Emerald run). The gate now also requires a share of states in which both sides return normally (within the
+tick limit, to the state's lr): `min_returned` per function in `difftest.toml`, default 0.95. Below it a run with
+no ABI difference is **insufficient**: exit code 3, JSON `status = "insufficient"`, `pass = false`;
+`anygba difftest` passes the code through and does not mark it verified. The report prints
+`returned normally (gate): n/total (share, required ...)`; JSON adds `states.returned`, `states.returned_share`,
+`masks.min_returned`; the `--mark-verified` comment includes the share.
+
+- Tests: unit tests for `min_returned` parsing (default, per function, range and type errors) and for
+  `classify` (pass at the threshold, insufficient below it, fail outranks it, exit codes); `override-difftest`
+  now checks `returned = 10000` on the passing run, a one-tick spec that is insufficient (exit 3, 0/200 returned,
+  front end exit 3 and no `verified`), and the same spec with `min_returned = 0` passing.
+- Emerald StringCopy spec retuned: planted terminated strings dominate (ram-src 30, overlap 6, vram-dest 6, new
+  vram-src 4 as a bounded bus source, low-budget 6); rom-src, io-src (was bus-src) and stack-overlap keep weight 1.
+  Seed 12345: ABI 10,072/10,072, full state identical 10,072/10,072, returned normally 9,749/10,072 (96.8%),
+  128 same-stop timeouts (io-src 99, rom-src 22, ram-src 6 where the destination overruns its own source,
+  low-budget 1), 4/4 blocks. Seed 777: ABI 10,072/10,072, returned 9,742/10,072 (96.7%), 156 same-stop.
+  The rest that does not return normally is mostly stack-overlap (both sides return to the overwritten address).
+  New entry: `verified = true  # anygba difftest passed 2026-10-25: 10072 states (96.8% returned normally), block
+  coverage 100.0%`.

@@ -54,8 +54,8 @@ MP2K sound; Fire Emblem GBA), so one rewrite serves several games.
 
 ## Constraints
 
-- Ghidra (Apache-2.0) runs as an external tool, not vendored; LLM access is optional (key from
-  `ANTHROPIC_API_KEY`); without it the tool still exports Ghidra output and runs difftests on
+- Ghidra (Apache-2.0) runs as an external tool, not vendored; LLM access is optional (the Claude Code
+  CLI with the user's login, or `ANTHROPIC_API_KEY`); without it the tool still exports Ghidra output and runs difftests on
   hand-written code.
 - pret decomp projects may be read as reference for names and behaviour (as the Emerald symbols file
   already does); their code is not copied into the repo.
@@ -79,7 +79,7 @@ anygba decomp: Ghidra headless ─► pseudo-C + types ─► LLM rewrite ─►
 | 01 | [Spike: one override end to end (gate)](phase-01-spike-override-gate.md) | 1w | none | completed |
 | 02 | [Override layer: config, codegen, guest API](phase-02-override-layer.md) | 1.5-2w | 01 | completed |
 | 03 | [Differential verification harness](phase-03-differential-verification.md) | 1-1.5w | 02 | completed |
-| 04 | [AI-assisted decomp tool (Ghidra + LLM)](phase-04-ai-decomp-tool.md) | 1.5-2w | 03 | pending |
+| 04 | [AI-assisted decomp tool (Ghidra + LLM)](phase-04-ai-decomp-tool.md) | 1.5-2w | 03 | completed |
 | 05 | [Gen 3 text printer override, Emerald and FireRed](phase-05-gen3-text-printer.md) | 1-1.5w | 04 | pending |
 
 Phase 01 is a gate: later phases start only after its exit criteria are recorded in the phase file.
