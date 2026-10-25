@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Validation and compatibility tracker"
-status: in-progress
+status: completed
 effort: 1-2w
 dependsOn: [8]
 ---
@@ -48,18 +48,19 @@ CI and docs only; revert.
 
 ## Implementation status
 
-Done: `--dump-frame-hash` in the game `main()` (no separate `headless.cpp`), `compat/` with 49 titles and
-`schema.md`, checkpoint tests (`ANYGBA_COMPAT_TESTS=ON`, `ctest -L compat`), `tools/compat-site/generate.py`,
-`pages.yml`, a compat job on three hosts in `ci.yml`, and `docs/dev/RETRO.md`. All 41 checkpoints pass
-on Windows (repo commits `eab35b6`, `e407071`). The interpreter-only run (`anygba-shot`) gives the
-same checkpoint picture for 40 of 41 titles; tonc `txt_se2` prints its own timing measurements.
+Done: `--dump-frame-hash` in the game `main()` (no separate `headless.cpp`), `compat/` with 50 titles
+and `schema.md`, checkpoint tests (`ANYGBA_COMPAT_TESTS=ON`, `ctest -L compat`),
+`tools/compat-site/generate.py`, `pages.yml`, a compat job on three hosts in `ci.yml`, and
+`docs/dev/RETRO.md`.
 
-Step 4 (2026-10-24): Pokemon Emerald from the user's dump (`compat/pokemon-emerald.toml`, `rom_id`
-only) reaches `in-game` through `anygba build`: new game to player control, in-game save to the 128 KB
-Flash and CONTINUE after a restart. It does not reach `playable`: no mGBA picture comparison yet, no
-real-time clock, and the trace-feedback pass compiles code the game copies onto its stack, which goes
-stale and stops the game (builds skip feedback for now). Three tonc checkpoints were re-recorded after
-the reset fetch-cost fix (`8ff13ee`); two still match the interpreter, `txt_se2` as before does not.
+Step 4: Pokemon Emerald from the user's dump (`compat/pokemon-emerald.toml`, `rom_id` only) is
+`playable`: real-time clock, trace-feedback passes that check compiled RAM code against its source
+bytes, in-game Flash saves, and pictures that match mGBA from boot to the first battle.
 
-Open: Emerald to `playable` (the two blockers above); CI on Linux and macOS has not run because nothing
-is pushed.
+- [x] CI green on three hosts with the full suite: CI run 40168774943 on main `93fa1f8` (2026-10-25) is green on every job: windows-msvc, windows-clang-cl, linux-gcc, linux-clang, macos-arm64, compat-windows-msvc, compat-linux-gcc, compat-macos-arm64 and android.
+- [x] Linux box 2026-10-25 (branch `chore/plan-closeout`): all 41 compat checkpoints pass
+  (`ctest -L compat -j4`); the full ctest, slow tests included (`mcp-e2e`, `feedback-*`, golden
+  images in `unit-tests`), passes except `video-timing`, which needs an idle machine (phase 11);
+  `tools/compat-site/generate.py` (50 titles) and `site/build.py --check` pass.
+- [x] Plan acceptance criteria met: jsmolka gba-tests on three hosts (CI), homebrew titles at full
+  speed with checkpoints (compat), Emerald boots to gameplay with saves (playable), HLE BIOS only.

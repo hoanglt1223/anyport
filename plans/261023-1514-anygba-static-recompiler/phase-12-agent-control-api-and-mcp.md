@@ -1,7 +1,7 @@
 ---
 phase: 12
 title: "Agent control API, MCP server, and play journal"
-status: pending
+status: completed
 effort: 2-3w
 dependsOn: [10]
 ---
@@ -55,3 +55,21 @@ The user wants AI agents to play, debug, and take control of a running AnyGBA ga
 
 - Breakpoints inside translated functions are limited to function entries; document it.
 - Input timing: agent input must be applied at frame boundaries to stay deterministic with save states.
+
+## Implementation status
+
+Completed: the in-game control server (off by default, runtime toggle, 127.0.0.1 only, token file),
+newline-delimited JSON-RPC, observe/play/control/debug/journal commands, function-entry breakpoints and
+memory watches, the play journal with retention and export, read-only mode and user takeover,
+`anygba-mcp` (stdio, launch/attach, PNG screenshots), per-game `[symbols]`, `symbols/BPEE.toml` for
+Pokemon Emerald verified by playing to the first battle through MCP, and `docs/user/AI-CONTROL.md`,
+`docs/dev/control-protocol.md`.
+
+- [x] Headless end-to-end test through `anygba-mcp` over stdio: buttons, stepping, screenshots,
+  state save/load with matching frame hashes, control and journal toggled without restart, journal
+  checked (ctest `mcp-e2e`; Windows, CI, Linux 2026-10-25).
+- [x] A wrong token and a non-loopback bind are refused (`tests/mcp/mcp-e2e.py`).
+- [x] No game data committed; the Emerald symbols are names and addresses.
+
+Leftover (NEEDS-WINDOWS, display): the on-screen agent indicator, hotkeys while paused and a real
+keypress taking over, in a window.

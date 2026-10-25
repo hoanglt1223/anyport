@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Hosts: desktop, Android, ARM handhelds"
-status: pending
+status: in-progress
 effort: 3-4w
 dependsOn: [5]
 ---
@@ -37,3 +37,14 @@ Native code runs well on weak devices, which is the main advantage over PPSSPP. 
 ## Rollback
 
 Platform-scoped; revert.
+
+## Progress (2026-10-25, branch feat/hosts-and-compat)
+
+- [x] `anypsp build` (tools/anypsp): analysis, psp_recomp, CMake build against the sources, packaging; install layout and release packages carry the sources with SDL3 (offline game builds)
+- [x] Linux x64 end to end with UNH 1: packaged program frame-identical to the interpreter over 7,400 scripted vblanks
+- [ ] Windows x64 and macOS arm64 (`.app`, codesign): implemented and documented, not run (no Windows/macOS here)
+- [x] Linux arm64 cross build (cmake/toolchains/aarch64-linux-gnu.cmake); unit tests pass under qemu-aarch64
+- [ ] Linux arm64 on a real ARM handheld, performance notes (needs the device)
+- [x] Android APK without Gradle: Vulkan renderer with GLES 3 fallback, touch overlay, gamepad/keyboard, disc picked through the storage access framework; UNH 1 reaches a battle and cubevfpu matches the desktop on an API 35 emulator
+- [ ] Android on a mid-range phone at full speed (needs the device)
+- [x] Desktop hosts in CI (ci.yml: Linux, Windows, arm64 cross + qemu tests, Android APK + emulator smoke), release.yml on v* tags

@@ -41,3 +41,9 @@ Bitfocus Companion is open-source Stream Deck software with hundreds of integrat
 ## Rollback
 
 Feature-scoped; revert.
+
+## Implementation status
+
+- [x] Satellite client, PSP surface, key image cache, page switching; e2e test against a local Satellite server.
+- [x] Version range pinned in code and docs: Satellite API 1.5 to 1.x (Companion 3.2+, pages need 4.3+), written against API 1.15 (Companion 5.2, `TESTED_API`); newer 1.x servers log a notice, 2.x is refused.
+- [ ] OBS scene switch and Spotify play/pause from the PSP with a real Bitfocus Companion (needs the PSP and a desktop with Companion).

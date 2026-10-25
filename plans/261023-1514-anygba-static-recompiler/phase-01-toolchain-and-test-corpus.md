@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Toolchain, repo, CI, test corpus"
-status: in-progress
+status: completed
 effort: 1w
 dependsOn: []
 ---
@@ -51,3 +51,16 @@ Greenfield repository. This phase fixes the layout and the cross-platform build 
 ## Rollback
 
 Greenfield; delete the repo branch.
+
+## Implementation status
+
+Completed. Repo, CMake skeleton, SDL3 platform layer, `platform-smoke`, hash-checked corpus fetch
+(`tests/fetch-corpus.{sh,ps1}`, `tests/corpus.lock`), doctest and the CI matrix are in place.
+
+- [x] `cmake --build` succeeds on all three CI hosts: CI run 40168774943 on main `93fa1f8` (2026-10-25) is green on every job: windows-msvc, windows-clang-cl, linux-gcc, linux-clang, macos-arm64, compat-windows-msvc, compat-linux-gcc, compat-macos-arm64 and android.
+- [x] `fetch-corpus` downloads and verifies every corpus file (every CI job; Linux box 2026-10-25).
+- [x] `platform-smoke` renders the test pattern headless (ctest `platform-smoke-headless`, Linux 2026-10-25).
+
+Leftover (NEEDS-WINDOWS, display and speakers): `platform-smoke` shown in a window with the tone
+audible on the Windows PC. Windowed and audible runs are not allowed on the build machines, so this
+is a user check.

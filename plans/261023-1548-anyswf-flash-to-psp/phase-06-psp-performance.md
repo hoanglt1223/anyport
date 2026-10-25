@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Performance and memory tuning on PSP-3000"
-status: pending
+status: in-progress
 effort: 1-2w
 dependsOn: [5]
 ---
@@ -34,6 +34,23 @@ Games that are playable on PC must hit their frame rate on a 333 MHz CPU with ~5
 ## Validation
 
 - All three test games hold their SWF frame rate on the PSP-3000 for 10 minutes without memory growth.
+
+Progress (2026-10-25, branch `feat/runtime-builtins`):
+
+- Profiler: `runtime/src/debug/profiler.c` times scripts, timeline, render and present,
+  counts draws and triangles, and reports C heap, script heap and VRAM; overlay toggled
+  with L+R+Select or `[debug] profiler`, logged with `--profile` (PC) or the setting (PSP);
+  warns once over a 40 MB heap.
+- Texture residency: `runtime/src/render/texture_cache.c` copies textures into the
+  ~688 KB of VRAM left after the frame buffers on first use and evicts least recently
+  used ones (never those the current GE list reads); misses draw from RAM.
+- PPSSPP measurements (scripted render scenes, not games): both hold 59.9 fps; the
+  drawing-API scene went from 4.5 to 0.6 ms of render time per frame after meshes were
+  drawn in place, and heap and script heap stay flat over 10 emulated minutes after
+  removing a per-frame scope allocation.
+- Still open: baselines and tuning for the three test games, VFPU and Media Engine work,
+  and every PSP-3000 measurement (no hardware or games on this box). Script hot-path
+  caches wait for real game profiles.
 
 ## Risks
 

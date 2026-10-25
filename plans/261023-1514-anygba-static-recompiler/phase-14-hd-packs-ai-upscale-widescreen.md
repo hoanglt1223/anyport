@@ -1,7 +1,7 @@
 ---
 phase: 14
 title: "HD packs, AI upscaling, and widescreen"
-status: pending
+status: completed
 effort: 4-6w
 dependsOn: [11]
 ---
@@ -43,3 +43,31 @@ Filters (phase 11) smooth pixel art but cannot add detail. The user wants GBA ga
 - Palette-cycling and procedurally drawn tiles produce many hashes; mitigate with palette-independent keys and dump filters.
 - Widescreen needs per-game work; document per-game status in compat.
 - AI model size and GPU availability; CPU fallback for offline only.
+
+## Implementation status
+
+Completed: HD renderer at internal scale with layers, windows, blending, mosaic and affine; HD pack
+dump/load with palette-independent keys, OBJ assembly and hot reload; `anygba hdpack` (dedupe,
+preview, import, ai-upscale, fetch-runtime); per-layer scalers and sub-pixel affine; offline and
+real-time AI upscaling through ONNX Runtime with pinned Real-ESRGAN models; per-game widescreen
+rules, the `pokeemerald-field` provider, menu/CLI/TOML options; `docs/user/HD-PACKS.md` and
+`docs/user/WIDESCREEN.md`.
+
+- [x] Dump/reload identity at 1x, synthetic 4x pack, internal scale matching 1x when downsampled and
+  the widescreen centre matching normal mode on corpus games (`unit-tests`; Windows, CI, Linux).
+- [x] AI offline upscale produces a pack, and the real-time timing is recorded. Windows PC (RX 6600
+  XT, DirectML): x4plus pack of 2,302 Emerald images in 147 s; real-time `ai=frame` 14 ms per frame.
+  Linux box 2026-10-25, CPU only, ONNX Runtime 1.24.4 fetched by `anygba hdpack fetch-runtime` (now
+  supported on Linux x64): a 166-image Littleroot dump in 3.2 s with general-x4v3 (52 images/s) and
+  36.0 s with x4plus (4.6 images/s); real-time `ai=frame` 500 ms per frame (general-x4v3) and
+  9.3 s per frame (x4plus), so on CPU AI is offline-only, as the requirement allows.
+- [x] Emerald checked headless (overworld, battle, menus) with screenshots outside the repo.
+  Widescreen 16:9: overworld and battles widened, other scenes pillarboxed. The edge pop-in is fixed:
+  ROM patches in `widescreen/BPEE.toml` widen the game's object culling while widescreen is on; a
+  1,200-frame walk through Littleroot shows the NPC entering at the right edge 4 frames earlier, with
+  no change inside the middle 240 columns.
+
+Notes: a few pixels at the outermost columns of the middle 240 differ from normal mode in some
+Emerald frames (at most 12 pixels, with and without the culling patch), from the HD path's known
+approximations (window edges on GBA pixel boundaries). The real-time 1080p/60 fps AI target is met
+only with a GPU (DirectML on the Windows PC); macOS still needs `ANYGBA_ONNXRUNTIME`.

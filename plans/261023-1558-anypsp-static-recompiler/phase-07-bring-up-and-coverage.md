@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Game bring-up and coverage tracking"
-status: pending
+status: in-progress
 effort: ongoing
 dependsOn: [6]
 ---
@@ -35,3 +35,11 @@ Coverage tracking turns a per-game hack into a framework other people can push f
 ## Rollback
 
 Docs and CI only.
+
+## Progress (2026-10-25, branch feat/hosts-and-compat)
+
+- [x] Coverage extraction: HLE by NID (anypsp-hle-coverage, hle-coverage.json), VFPU instructions translated natively (anypsp-coverage), GE commands (scan in tools/compat-site/generate.py)
+- [x] Compat records (compat/*.toml, schema.md) and the site generator with badges; pages.yml publishes once Pages is enabled (PAGES_ENABLED)
+- [x] CONTRIBUTING.md with the legal policy, bring-up discussion template
+- [x] UNH 1 (ULUS-10299) entry with headless evidence and the slow `unh1_regression` ctest (skips without the disc)
+- [ ] Five titles of different genres in-game, two playable start to finish (only UNH 1 locally; needs more games)

@@ -1,7 +1,7 @@
 ---
 title: "PSP Companion: Claude voice client, secondary screen, and PC speaker on a PSP-3000"
 description: "Turn the PSP-3000 into a low-bandwidth Wi-Fi companion for the PC: push-to-talk Claude assistant using the built-in microphone, a widget secondary screen with cursor input and macro buttons, a Stream Deck mode, and wireless speakers for PC audio."
-status: pending
+status: in-progress
 priority: P2
 effort: 6-8w part-time
 branch: main
@@ -56,12 +56,12 @@ The PSP-3000 only has 802.11b, with about 1-2 Mbps of real throughput and high l
 
 | # | Phase | Effort | Depends on | Status |
 |---|---|---|---|---|
-| 01 | [Protocol, pairing, host and PSP skeletons](phase-01-protocol-and-skeletons.md) | 1-2w | none | pending |
-| 02 | [Claude voice assistant](phase-02-claude-voice-assistant.md) | 2w | 01 | pending |
-| 03 | [Secondary screen: widgets, cursor, macros](phase-03-secondary-screen.md) | 1-2w | 01 | pending |
-| 04 | [PC audio to PSP speakers](phase-04-pc-speaker.md) | 1w | 01 | pending |
-| 05 | [Polish, battery, packaging](phase-05-polish-and-packaging.md) | 1w | 02, 03, 04 | pending |
-| 06 | [Stream Deck mode (Bitfocus Companion Satellite)](phase-06-stream-deck-mode.md) | 1w | 03 | pending |
+| 01 | [Protocol, pairing, host and PSP skeletons](phase-01-protocol-and-skeletons.md) | 1-2w | none | in-progress |
+| 02 | [Claude voice assistant](phase-02-claude-voice-assistant.md) | 2w | 01 | in-progress |
+| 03 | [Secondary screen: widgets, cursor, macros](phase-03-secondary-screen.md) | 1-2w | 01 | in-progress |
+| 04 | [PC audio to PSP speakers](phase-04-pc-speaker.md) | 1w | 01 | in-progress |
+| 05 | [Polish, battery, packaging](phase-05-polish-and-packaging.md) | 1w | 02, 03, 04 | in-progress |
+| 06 | [Stream Deck mode (Bitfocus Companion Satellite)](phase-06-stream-deck-mode.md) | 1w | 03 | in-progress |
 Phases 02, 03, and 04 can run in parallel after 01.
 
 ## Dependencies

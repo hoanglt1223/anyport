@@ -1,7 +1,7 @@
 ---
 phase: 11
 title: "Graphics filters, colour, and HD upscaling"
-status: pending
+status: completed
 effort: 1-2w
 dependsOn: [10]
 ---
@@ -43,3 +43,30 @@ The user wants VisualBoyAdvance-M style video options: interpolation and pixel-a
 ## Risks
 
 - GPU API availability on older machines; keep the CPU fallback.
+
+## Decision: CPU scalers, GPU final scale and effects
+
+The pixel-art scalers, colour conversion and ghosting run on the CPU at no more than 6x the GBA
+picture (at most 1440x960, all cores); the final scaling to the output size and the screen effects
+run on the GPU through SDL_Renderer, and without a GPU the whole chain runs on the CPU. This departs
+from "filters run on the GPU" and is kept: per-filter shaders would need SDL_GPU plus a
+SPIR-V/DXIL/MSL shader toolchain in every build, while the CPU stage at source scale is well inside
+the frame budget and keeps CPU and GPU output identical (golden images). Documented in
+`docs/user/VIDEO.md` ("How it runs").
+
+## Implementation status
+
+Completed: every filter in the requirement list, colour correction, gamma, debanding, output
+resolutions with 3:2 aspect and integer scaling, chained effects, menu, `--filter`/`--video`, TOML,
+`docs/user/VIDEO.md` and the provenance in `THIRD_PARTY.md` (hqx, xBR/xBRZ and the 2xSaI family
+written from algorithm descriptions).
+
+- [x] Golden images per filter on self-authored frames pass (`unit-tests`; Windows, CI, Linux 2026-10-25).
+- [x] 4K within the frame budget: on the development PC every filter passes `video-timing` on both
+  paths. Linux 2026-10-25: the GPU path renders a 4K frame in 2.0-2.2 ms (Mesa llvmpipe, hidden
+  window); the CPU-only path measured 20-28 ms for its slowest chain because other jobs kept the
+  load average at 15-25 on 16 cores (nearest 2.5 ms, most chains 10-14 ms), so the test was not
+  meaningful there.
+- [x] No window or audio during tests (hidden window, headless runs).
+
+Leftover (NEEDS-WINDOWS, display): fullscreen and window resizing on a real monitor.

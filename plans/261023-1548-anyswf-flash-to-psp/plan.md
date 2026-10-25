@@ -59,10 +59,10 @@ game.swf ─► swf2c (Rust)                                libswfrt
 | 02 | [SWF parsing and asset pipeline](phase-02-swf-parsing-and-assets.md) | 2w | 01 | completed |
 | 03 | [GE renderer and display list](phase-03-ge-renderer-and-display-list.md) | 3w | 02 | in-progress |
 | 04 | [AVM1 ahead-of-time compiler](phase-04-avm1-aot-compiler.md) | 3-4w | 02 | completed |
-| 05 | [Runtime built-ins: MovieClip, Key, Mouse, Sound, SharedObject](phase-05-runtime-builtins.md) | 2-3w | 03, 04 | pending |
-| 06 | [Performance and memory tuning on PSP-3000](phase-06-psp-performance.md) | 1-2w | 05 | pending |
-| 07 | [Game bring-up and compatibility list](phase-07-game-bring-up.md) | ongoing | 06 | pending |
-| 08 | [Native PC and Android export](phase-08-pc-android-export.md) | 2w | 05 | pending |
+| 05 | [Runtime built-ins: MovieClip, Key, Mouse, Sound, SharedObject](phase-05-runtime-builtins.md) | 2-3w | 03, 04 | in-progress |
+| 06 | [Performance and memory tuning on PSP-3000](phase-06-psp-performance.md) | 1-2w | 05 | in-progress |
+| 07 | [Game bring-up and compatibility list](phase-07-game-bring-up.md) | ongoing | 06 | in-progress |
+| 08 | [Native PC and Android export](phase-08-pc-android-export.md) | 2w | 05 | in-progress |
 
 Phases 03 and 04 can run in parallel.
 

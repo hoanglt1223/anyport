@@ -52,7 +52,17 @@ swf2c compile game.swf -o <dir>                        # <dir>/game.c + assets.b
 python tests/avm1/run-avm1-tests.py --swf2c <swf2c> --out out/avm1 --corpus out/corpus --generator "Visual Studio 17 2022" [--only ruffle_<name>]   # Ruffle tests default to tests/ruffle-avm1; gate: 100% corpus, >=80% Ruffle
 sh tests/fetch-mtasc.sh && sh tests/build-corpus.sh    # self-authored AS2 test SWFs
 sh scripts/psp-build.sh                                # out/psp/apps/{hello,player}/EBOOT.PBP via pspdev Docker image (Docker Desktop must be running)
+anyswf build game.swf --target psp|linux|windows|macos|android -o <dir> [--config game.toml] [--work <dir>] [--cmake-arg -D...]
+                                                       # native game (docs/user/EXPORT.md); desktop targets only on their own OS; android needs ANDROID_HOME (SDK + NDK) and a JDK
+swf2c assets|compile ... --target psp|pc|android       # pc/android keep the stage size as the screen
+python tests/psp/run-psp-corpus.py --anyswf <anyswf>   # AS2 corpus as EBOOTs under PPSSPPHeadless (Docker image ppsspp-headless:local)
+python tools/compat-site/generate.py [--out dir]       # compat/*.toml -> progress.html + badges; tests: python -m unittest discover -s tools/compat-site
+python tests/avm1/run-avm1-tests.py ... --ruffle tests/ruffle-avm1-builtins --min-ruffle 50   # built-in Ruffle tests (known gaps; floor)
+<game or anyswf-player> assets.bin --headless --frames N [--input F:cross+up@X/Y,...] [--save-dir D] [--wav f.wav] [--config anyswf.toml] [--profile]
+                                                       # headless = deterministic (frame clock, sound mixed in-thread); tests pass --save-dir
 ```
+
+AnySWF corpus tests may have `tests/swf-src/<Name>.toml` (num_frames, input, runs, audio, utc) and `// base: library` (compiled into the self-made movie from `tests/swf-src/make-base-swfs.py`); scripted render cases live in `tests/render/as` (`code = true` in cases.toml; refs from Ruffle's exporter). Runtime settings and supported ActionScript: `repos/anyswf/docs/user/USAGE.md`.
 
 AnySWF render backends: `runtime/src/render/gl.c` (PC; blend modes through FBO layers) and `ge.c` (PSP; per-shape GE blending, stencil = framebuffer alpha). Tagging `v*` triggers `.github/workflows/release.yml`.
 
@@ -64,7 +74,11 @@ cargo test -p <crate> <test_name>           # single test
 cargo run -p companion-host -- --headless --config <scratch config bound to 127.0.0.1>   # never launch the tray UI on this PC
 cargo run -p pspc-fontgen                   # regenerate psp/font_vi.c after editing psp/assets/font-vi.hex
 sh scripts/build-psp.sh                     # PSP EBOOT via pspdev Docker image (needs Docker running)
+sh host/packaging/linux/package.sh [ver]    # out/packages/companion-host-<ver>-linux-<arch>.tar.gz (headless host, install.sh, systemd user unit)
+docker run --rm -v "$PWD:/work" -w /work/host/packaging/windows amake/innosetup /DAppVersion=<v> "/DSourceDir=Z:\\work\\<dir with companion-host.exe>" companion-host.iss   # Windows installer under Wine (Wine paths)
 ```
+
+PPSSPPHeadless runs of the EBOOT need `--shm-size=1g` on `docker run` (the default 64 MB `/dev/shm` ends in SIGBUS, exit 135, once the save dialog runs). The settings page is `http://127.0.0.1:47863/settings` (token-guarded; `Pair new PSP` returns a PIN).
 
 Host tests never inject input, touch the microphone, or play audio: desktop actions go through the `actions::Executor` trait (tests use a recording executor), the PC speaker uses `audio::capture::GeneratedSource`, and Claude, speech-to-text, text-to-speech and Bitfocus Companion are local test servers. Set `cfg.streamdeck.enabled = false` in e2e tests that do not need it (the default connects to 127.0.0.1:16622). whisper.cpp/Piper tests run only with `PSPC_WHISPER_BIN`+`PSPC_WHISPER_MODEL` / `PSPC_PIPER_BIN`+`PSPC_PIPER_VOICE`. Tagging `v*` triggers `.github/workflows/release.yml` (host exe + EBOOT to a GitHub Release).
 
@@ -81,20 +95,32 @@ out/msvc/recomp/Release/psp_recomp.exe <ELF/PRX> --auto <gen dir> --seeds <dir>/
 cmake -S . -B out/runners/<n> -DANYPSP_RUNNER_NAME=<n> -DANYPSP_RUNNER_GENERATED=<gen dir> [-DANYPSP_RUNNER_OPT=d]
 python tests/feedback-pass.py <module> [--frames 300]  # analyze -> translate -> headless run -> feedback loop
 out/msvc/Release/anypsp-interp.exe <module> [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--dump-at f,...] [--hle-stubs file]
+                                                       # [--deterministic] [--osk text]... (answers on-screen keyboards in order)
                                                        # interpreter-only runner (no translation, seconds to start);
                                                        # prints imports without HLE at start; --dump-at writes frameN.ppm
                                                        # to the cwd, so run games from a scratch folder, never the repo
 python tests/conformance.py [cpu/...] [--runner exe]   # pspautotests output vs .expected (default runner: anypsp-interp)
-python tests/translated-conformance.py [cpu/...]        # same, through psp_recomp-translated runners (one shared build tree)
+                                                       # kernel set: threads/ io/ sysmem/ rtc/ (runs from ms0:/PSP/GAME/__autotest)
+out/msvc/Release/anypsp-hle-coverage.exe [--json f] [--markdown f]   # HLE functions per library vs data/nids.toml; runs after every build into <out>/hle-coverage.{json,md}
+python tests/translated-conformance.py [cpu/...]        # same, through psp_recomp-translated runners (one shared build tree, out/tconf/runners)
+                                                       # Linux: CMAKE_GENERATOR=Ninja CC=clang CXX=clang++ ... --tools out/linux --build-jobs 4
+ANYPSP_CPU_PROFILE=<file> <runner> ...                 # at exit: interpreter fallbacks per instruction name and interpreted entries
 out/msvc/Release/anypsp_cpu_difftest.exe               # generated code vs reference interpreter, random states (ctest cpu_difftest)
-out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|soft] [--scale n] [--frames-dir d] [--png-every n] [--hashes f] [--screenshot f.png]
+out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|vulkan|soft] [--msaa n] [--vk-cache f|off] [--scale n] [--frames-dir d] [--png-every n] [--hashes f] [--screenshot f.png]
                                                        # [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--hle-stubs file] as anypsp-interp
                                                        # [--coherent lazy|1|0] (lazy default; 1 = readback per list, debug) [--deterministic] (repeatable scripted runs)
                                                        # [--cheats auto|file.ini|off] (CWCheat, auto in a window) [--dialogs auto|show] (system dialogs; show in a window)
-python tests/ge-screenshots.py [--runner exe] [--renderer gl|soft] [filter]  # pspautotests GE tests vs PPSSPP reference screenshots (MSE)
+python tests/ge-screenshots.py [--runner exe] [--renderer gl|vulkan|soft] [--msaa n] [--against <earlier --out dir>] [filter]  # pspautotests GE tests vs PPSSPP reference screenshots (MSE)
+anypsp build <game.iso|disc dir|EBOOT|prx> -o <dir> [--target linux|windows|macos|android] [--opt d|1|2] [--jobs N] [--feedback f] [--work dir]
+                                                       # analyze -> psp_recomp -> CMake build of the game against the sources -> <dir>/<Name>/<Name>
+                                                       # (+ game files, nids.toml) or <Name>.apk; docs/user/build.md, docs/user/android.md
+out/linux/anypsp-coverage > coverage.json && python tools/compat-site/generate.py --coverage coverage.json [--check]   # compat page + HLE/VFPU/GE badges
+python tests/unh1-regression.py --play out/linux/anypsp-play [--program <anypsp build output>]   # slow ctest unh1_regression; skips (77) without ~/games/psp/unh1.iso
+cmake -S . -B out/linux-arm64 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/aarch64-linux-gnu.cmake   # Linux arm64 cross build (apt g++-aarch64-linux-gnu); run tests with qemu-aarch64 -L /usr/aarch64-linux-gnu
+sh platform/android/emulator-smoke.sh app.apk [frames]  # APK on a running emulator: --frames N run, smoke.png (Android SDK on this box: ~/android-sdk, AVD in scratch)
 ```
 
-GE renderer: desktop OpenGL 3.3 core via SDL3 (fetched by CMake; `-DANYPSP_BUILD_GPU=OFF` skips it) on a hidden window that is never shown; frames go to PNG files and per-frame hashes. `anypsp-run-<name>-gpu` is built next to each per-game runner. Code: `runtime/gpu/`, `runtime/host/ge*.{cpp,hpp}`.
+GE renderer: desktop OpenGL 3.3 core via SDL3 (fetched by CMake; `-DANYPSP_BUILD_GPU=OFF` skips it) on a hidden window that is never shown, or Vulkan (`--renderer vulkan`, headless, no window; needs the Vulkan loader/headers and glslangValidator, `-DANYPSP_BUILD_VULKAN=OFF` skips it; Linux box: lavapipe, `ANYPSP_VK_VALIDATION=1` for the validation layer); frames go to PNG files and per-frame hashes. Both backends are `GeGpu` devices under one surface manager (`runtime/host/ge_surfaces.cpp`) and share the shaders in `runtime/host/shaders/` (GL compiles them at run time, Vulkan to SPIR-V at build time). `anypsp-run-<name>-gpu` is built next to each per-game runner. Code: `runtime/gpu/`, `runtime/gpu/vulkan/`, `runtime/host/ge*.{cpp,hpp}`.
 
 Runners are headless (no window, no audio). The CPU reference interpreter in `runtime/cpu/` is adapted from PPSSPP; generated code calls `anypsp::cpu::execute` for instructions it does not translate inline. Write Python edit scripts with the Write tool, not shell heredocs: the shell layer here rewrites backslash escapes. Pipeline and file formats: `repos/anypsp/docs/dev/loader-and-analysis.md`. The web/EGL build in `runtime/CMakeLists.txt` is upstream's and untested here. Never import upstream `profiles/` or `pgd.cpp` (game output, KIRK keys). Write files from Python with `write_bytes`: `write_text` on Windows produces CRLF.
 
@@ -102,7 +128,11 @@ Runners are headless (no window, no audio). The CPU reference interpreter in `ru
 
 ```
 pip install -r requirements.txt && python -m unittest discover -s tests -t .     # converter + engine tests
+python -m rpy2psp build <game> -o <out>/<Folder> --font-dir <SDK fonts> [--language L]   # EBOOT.PBP (engine + title/ICON0/PIC1) + script.vnb + data.pak
 python -m rpy2psp compile <game> -o <out> && python -m rpy2psp pack <game> -o <out> --font-dir <SDK fonts>
+python -I tools/census/fetch_games.py --full <dir> the_question arcance zero_echoes   # target games (RPY2PSP_TARGETS=<dir>), outside the repo
+python tests/psp/ppsspp_run.py <built folder> tests/psp/the-question.timeline -o <scratch> --vnpsp <PC vnpsp>   # PPSSPPHeadless vs PC shots, timing, saves
+python tests/psp/music_loop_check.py -o <scratch> --vnpsp <PC vnpsp>              # gapless music in PPSSPP
 cmake -S . -B out/msvc -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE=<python with requirements>
 cmake --build out/msvc --config Release && ctest --test-dir out/msvc -C Release --output-on-failure
 out/msvc/vnpsp/Release/vnpsp.exe <out> --play script.txt --trace t.txt [--fast] [--audio]   # headless scripted run
@@ -110,7 +140,7 @@ out/msvc/vnpsp/Release/vnpsp.exe <out> --headless --frames 240   # platform smok
 sh scripts/psp-build.sh                                           # EBOOT via pspdev Docker image (needs Docker running)
 ```
 
-Engine tests drive `vnpsp.exe` headless and compare each event with `tests/compiler/refvm.py`; never run `vnpsp.exe` without `--play` or `--headless` on this PC. Target-game tests need the games in `%TEMP%/rpy2psp-census/full` (or `RPY2PSP_TARGETS`) and cache converted data in `%TEMP%/vnpsp-targets`. Driver commands: top of `vnpsp/src/driver.c`; engine design: `docs/dev/engine.md`.
+Linux: build into `out/linux` (Ninja, clang), use a venv in `out/venv`, and set `VNPSP_EXE=out/linux/vnpsp/vnpsp`; `rpy2psp build` finds the engine in `out/psp/vnpsp/EBOOT.PBP`. Engine tests drive `vnpsp.exe` headless and compare each event with `tests/compiler/refvm.py`; never run `vnpsp.exe` without `--play` or `--headless` on this PC. Target-game tests need the games in `%TEMP%/rpy2psp-census/full` (or `RPY2PSP_TARGETS`) and cache converted data in `%TEMP%/vnpsp-targets`. Driver commands: top of `vnpsp/src/driver.c`; engine design: `docs/dev/engine.md`.
 
 **Engine runners** (forks of upstream, branch `psp`, PSP-only builds through the pspdev Docker image; init the submodules each README lists first):
 
@@ -124,10 +154,16 @@ repos/lovepotion-psp: platform/psp/run-headless.sh <scratch ms dir> [game dir|.l
 
 All three log fps and per-frame CPU time to stdout every 5 s (visible in PPSSPPHeadless output). TIC-80's audio-queue test builds on the host with `-DBUILD_TESTS=ON` (`psp-audio-ring-test`).
 
-**PPSSPPHeadless** (EBOOT smoke tests; never run the windowed PPSSPP on this PC): the Docker image `ppsspp-headless:local` has the binary (`PPSSPPHeadless` on the PATH). To rebuild it: scratch clone of `refs/ppsspp` (`git submodule update --init --recursive --depth 1 -- ext ffmpeg`) on `debian:trixie` with `libsdl3-dev libsdl3-ttf-dev libfontconfig-dev libgl1-mesa-dev libglu1-mesa-dev libegl-dev`, then `cmake -DHEADLESS=ON -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF` and `--target PPSSPPHeadless`; copy the binary and `assets/` onto `ppsspp-headless-run:local` (runtime libs only). Run:
+**PPSSPPHeadless** (EBOOT smoke tests; never run the windowed PPSSPP on this PC): the Docker image `ppsspp-headless:local` has the binary (`PPSSPPHeadless` on the PATH). To rebuild it: scratch clone of `refs/ppsspp` (`git submodule update --init --recursive --depth 1 -- ext ffmpeg`) on `debian:trixie` with `libsdl3-dev libsdl3-ttf-dev libfontconfig-dev libgl1-mesa-dev libglu1-mesa-dev libegl-dev`, then `cmake -DHEADLESS=ON -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF` and `--target PPSSPPHeadless`; copy the binary and `assets/` onto `ppsspp-headless-run:local` (runtime libs only). `scripts/ppsspp-headless/build-image.sh [ppsspp checkout]` builds both (Dockerfile next to it). Run:
 
 ```
 PPSSPPHeadless --memstick=<ms root> --timeout-emulated=15 --screenshot-at=8:a.png,15:b.png --press=5:0x4000:0.2,6:0x40:0.1 [--log] <ms root>/PSP/GAME/<Folder>/EBOOT.PBP
+```
+
+Linux box (mount a scratch dir as `/work`; both images work):
+
+```
+docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/work" -w /work ppsspp-headless:local PPSSPPHeadless --memstick=/work/ms --timeout-emulated=5 --screenshot-at=3:a.png /work/ms/PSP/GAME/HELLO/EBOOT.PBP
 ```
 
 Pass the EBOOT as a host path (not `ms0:/`); button masks are pspctrl values (0x4000 = Cross, 0x40 = Down, 0x20 = Right); `--press` takes a comma-separated list. Screenshots are written relative to the working directory. PPSSPP returns 8.3 file names in upper case (`GAME.P8`), and FAT on the PSP likely does too, so match extensions case-insensitively.

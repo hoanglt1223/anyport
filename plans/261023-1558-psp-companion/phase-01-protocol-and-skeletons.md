@@ -46,3 +46,10 @@ Every feature rides on one connection between PSP and host. Getting it right fir
 ## Rollback
 
 Greenfield; delete the branch.
+
+## Implementation status
+
+- [x] Protocol spec, host discovery/pairing/encrypted channels/tray, PSP client (cargo tests and C-vs-Rust cross-checks green on Linux).
+- [x] Pairing key stored in the PSP save folder (`ms0:/PSP/SAVEDATA/PSPCOMPAN0000`, system save utility); an old `pairing.dat` beside the EBOOT is migrated and removed. Verified in PPSSPPHeadless: a legacy file was moved into the save and the app went straight to "Connecting to <PC>".
+- [x] PPSSPPHeadless smoke: the EBOOT boots to the pairing screen (Wi-Fi dialog, discovery, "No PC found" without a host).
+- [ ] Router test with the user's 2.4 GHz WPA2-AES network and real pairing on the PSP-3000 (needs the hardware).

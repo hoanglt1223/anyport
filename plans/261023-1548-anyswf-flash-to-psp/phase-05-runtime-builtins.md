@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Runtime built-ins"
-status: pending
+status: in-progress
 effort: 2-3w
 dependsOn: [3, 4]
 ---
@@ -38,6 +38,30 @@ Games call into the Flash player's built-in classes. This phase implements the s
 ## Validation
 
 - Three chosen AS2 mini games are playable start to finish on the PC target.
+
+Progress (2026-10-25, branch `feat/runtime-builtins`):
+
+- Done on PC and PSP (PPSSPP): every built-in listed above, plus AsBroadcaster, Stage,
+  Color, TextFormat, setTimeout and `Object.registerClass` linkage. Code is in
+  `runtime/src/builtins/` (the planned `math.c`, `string.c` and `array.c` already existed
+  as `runtime/src/avm1/builtins*.c`), the mixer in `runtime/src/audio/`, settings in
+  `runtime/src/config.c`; `docs/user/USAGE.md` documents them.
+- Design calls: the drawing API tessellates by horizontal bands (holes and
+  self-intersections follow even-odd), gradients are shaded per vertex on a grid; MP3
+  streams decode with minimp3 on the main CPU (Media Engine decoding stays an optional
+  phase 06 item); saves are AMF0 `<name>.sol` files in the game's save folder
+  (`ms0:/PSP/SAVEDATA/<id>/`, the id from `anyswf build`); `anyswf.toml` is the build
+  config file, copied next to `assets.bin`, with runtime tables `[keys]`, `[cursor]`,
+  `[stage]`, `[debug]`; on PC the real keyboard and mouse drive Key and Mouse.
+- Tests: 15/15 self-authored AS2 tests (10 new, with scripted input, repeated runs for
+  SharedObject and an audible-output check), 165/199 Ruffle AVM1 tests (82.9%), 26/51 in
+  the new `tests/ruffle-avm1-builtins` suite (rich-text layout excluded; floor 50%),
+  28/28 render tests including two scripted cases against Ruffle references, unit tests
+  for config, mixer, tessellation and texture cache; the PSP build passes 11/11 corpus
+  tests under PPSSPPHeadless (4 skipped: scripted input, UTC time zone).
+- Still open, and why this phase stays `in-progress`: the validation needs three real AS2
+  games, which are not on the Linux build box; input text editing (sceUtilityOsk),
+  rich-text runs, `setMask` and `beginBitmapFill` are not implemented.
 
 ## Risks
 

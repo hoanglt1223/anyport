@@ -1,7 +1,7 @@
 ---
 title: "AnyGBA: static recompiler that turns GBA ROMs into native executables"
 description: "Recompile ARM7TDMI/Thumb code from a GBA ROM to C once, link it against an HLE runtime (BIOS, PPU, APU, I/O), and ship a native Windows/Linux/macOS executable with no emulator loop."
-status: in-progress
+status: completed
 priority: P2
 effort: 10-14w part-time
 branch: main
@@ -53,7 +53,7 @@ ROM ──► anygba-recomp (C++20)                       libanygba (C/C++20, SD
 
 | # | Phase | Effort | Depends on | Status |
 |---|---|---|---|---|
-| 01 | [Toolchain, repo, CI, test corpus](phase-01-toolchain-and-test-corpus.md) | 1w | none | in-progress |
+| 01 | [Toolchain, repo, CI, test corpus](phase-01-toolchain-and-test-corpus.md) | 1w | none | completed |
 | 02 | [Decoder and function discovery](phase-02-decoder-and-function-discovery.md) | 2w | 01 | completed |
 | 03 | [C code generator](phase-03-c-code-generator.md) | 2-3w | 02 | completed |
 | 04 | [Runtime core: bus, scheduler, dispatch, fallback](phase-04-runtime-core.md) | 2w | 03 | completed |
@@ -61,12 +61,12 @@ ROM ──► anygba-recomp (C++20)                       libanygba (C/C++20, SD
 | 06 | [PPU renderer](phase-06-ppu-renderer.md) | 2w | 04 | completed |
 | 07 | [APU](phase-07-apu.md) | 1w | 04 | completed |
 | 08 | [Saves, input, packaging, per-game config](phase-08-saves-input-packaging.md) | 1w | 05, 06, 07 | completed |
-| 09 | [Validation and compatibility tracker](phase-09-validation-and-compat-tracker.md) | 1-2w | 08 | in-progress |
+| 09 | [Validation and compatibility tracker](phase-09-validation-and-compat-tracker.md) | 1-2w | 08 | completed |
 | 10 | [Player features: save states, speed, cheats, menu, controls](phase-10-player-features.md) | 1-2w | 08 | completed |
-| 11 | [Graphics filters, colour, and HD upscaling](phase-11-graphics-filters-and-upscaling.md) | 1-2w | 10 | pending |
-| 12 | [Agent control API, MCP server, and play journal](phase-12-agent-control-api-and-mcp.md) | 2-3w | 10 | pending |
-| 13 | [Android target and game launcher](phase-13-android.md) | 2-3w | 10, 11 | pending |
-| 14 | [HD packs, AI upscaling, and widescreen](phase-14-hd-packs-ai-upscale-widescreen.md) | 4-6w | 11 | in-progress |
+| 11 | [Graphics filters, colour, and HD upscaling](phase-11-graphics-filters-and-upscaling.md) | 1-2w | 10 | completed |
+| 12 | [Agent control API, MCP server, and play journal](phase-12-agent-control-api-and-mcp.md) | 2-3w | 10 | completed |
+| 13 | [Android target and game launcher](phase-13-android.md) | 2-3w | 10, 11 | completed |
+| 14 | [HD packs, AI upscaling, and widescreen](phase-14-hd-packs-ai-upscale-widescreen.md) | 4-6w | 11 | completed |
 
 Phases 05, 06 and 07 can run in parallel after 04 because they own separate runtime modules.
 
@@ -84,3 +84,10 @@ Phases 05, 06 and 07 can run in parallel after 04 because they own separate runt
 ## Legal model
 
 Same as AnyPS5: ship only the tool and runtime. Users supply their own ROM dumps. The HLE BIOS removes the need for a BIOS image.
+
+## Closeout (2026-10-25)
+
+All phases are completed. Verified on the Linux build box (branch `chore/plan-closeout` in
+`repos/anygba`) and in CI on three hosts. Leftovers that need a person or other hardware are listed in
+each phase's implementation status: windowed/audible checks on the Windows PC (phases 01, 11, 12) and
+the user's phone (phase 13).

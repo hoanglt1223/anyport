@@ -46,3 +46,10 @@ Push-to-talk on the PSP, intelligence on the host.
 ## Rollback
 
 Feature-scoped; revert.
+
+## Implementation status
+
+- [x] Push-to-talk, mic cleanup, whisper.cpp / hosted STT, streaming Claude client, Piper / hosted TTS, history and error notices (host tests with local test servers).
+- [x] Real engines on Linux: whisper.cpp built from source (`base` model) and the Piper 2023.11.14-2 release with `en_US-amy-medium` and `vi_VN-vais1000-medium`; the gated tests pass, including a Piper-to-whisper.cpp round trip (`piper_speech_round_trips_through_whisper`).
+- [ ] Live Claude API run (needs the user's API key).
+- [ ] Ten Vietnamese and ten English questions on the PSP-3000 with first audio within about 3 s (needs the hardware).

@@ -1,7 +1,7 @@
 ---
 phase: 13
 title: "Android target and game launcher"
-status: pending
+status: completed
 effort: 2-3w
 dependsOn: [10, 11]
 ---
@@ -46,3 +46,32 @@ The user wants AnyGBA games on Android. Generated C is portable and SDL3 support
 
 - Emulator-based CI is slow; keep it to one smoke test.
 - Per-game APK package ids and signing keys must be stable across rebuilds so saves survive updates.
+
+## Decision: APKs without Gradle
+
+`anygba build --target android` assembles the APK with the SDK command-line tools (aapt2, javac, d8,
+zipalign, apksigner) and a small ZIP writer instead of generating a Gradle project. Kept: it needs
+only SDK packages, works offline, and takes seconds; Gradle would add a network download, a wrapper
+and a plugin version to keep current for no feature AnyGBA uses. Details in `docs/dev/ANDROID.md`.
+The launcher loads game packages (`.agp`) with `dlopen` from app storage, which is why it targets
+API 28 (documented there too).
+
+## Implementation status
+
+Completed: arm64-v8a/x86_64 APKs with stable package ids and debug or user keys, `.agp` game
+packages and the launcher, touch overlay (layouts, safe areas, haptics, floating menu button,
+layout editor), gamepads, lifecycle saves, share-sheet export/import, CI and release assets,
+`docs/user/ANDROID.md`.
+
+- [x] Headless emulator, frame hash equals the desktop build at frame 300 (`tonc/obj_demo`): in CI on
+  every push, and on the Linux box 2026-10-25 (API 35 x86_64 emulator with KVM,
+  `platform/android/emulator-smoke.sh`, hash `d5ed18a2...51bd` on both).
+- [x] Launcher UI on the emulator (Linux 2026-10-25): the package was imported through the system
+  file picker, listed as "obj_demo / Never played", and started from the list in its `:game` process
+  with the touch overlay drawn.
+- [x] Save survives app kill and restart, and scripted touch input moves the sprite (Windows PC
+  emulator run, recorded in `docs/dev/ANDROID.md`).
+
+Leftovers: NEEDS-HARDWARE: the user's own phone (sideload), haptics and real gamepads; the APK
+built on Linux is signed with a different debug key than the phone's install, so the phone needs a
+Windows-built APK or that PC's `debug.keystore` to update in place.
