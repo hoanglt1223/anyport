@@ -7,7 +7,7 @@ Every plan was carried as far as this Linux box allows (no display, no PSP-3000,
 | Repo | Head | CI | Delivered |
 |---|---|---|---|
 | anygba | 6c9f1e6 | green | Plan closed (14/14 phases). Linux ONNX Runtime download, Emerald 16:9 culling fix. Function overrides merged: `[[skip]]` hang and difftest exit codes fixed, agbcc switch resolution, `games = [...]` limit, FireRed symbols, Emerald text-printer regeneration specs. |
-| anypsp | 60e6f78 | green at cd4ded7 (60e6f78 running at writing time) | Vulkan GE backend (headless, MSAA, pipeline cache), GE exact 13 -> 18/28. HLE: kernel conformance 14 -> 134/186, sceMp3, OSK, msgpipe/TLS/VTimer, coverage counter. Codegen: 74/104 VFPU ops inline, import-stub bug (black demo frames) fixed, CPU conformance 37 -> 42/55. Hosts: `anypsp build` (UNH 1 frame-identical to the interpreter, ~3x faster), Android APK (Vulkan + GLES 3), Linux arm64, CI, release, compat page and badges. |
+| anypsp | be7db9f | green | MSVC-only `cpu_difftest` failures fixed: MSVC quieted the constant VFPU NaN 0x7F800001 (NaN results are now decided in integer bits), and the reference `vsgn` read uninitialised stack through an S swizzle past the size. Vulkan GE backend (headless, MSAA, pipeline cache), GE exact 13 -> 18/28. HLE: kernel conformance 14 -> 134/186, sceMp3, OSK, msgpipe/TLS/VTimer, coverage counter. Codegen: 74/104 VFPU ops inline, import-stub bug (black demo frames) fixed, CPU conformance 37 -> 42/55. Hosts: `anypsp build` (UNH 1 frame-identical to the interpreter, ~3x faster), Android APK (Vulkan + GLES 3), Linux arm64, CI, release, compat page and badges. |
 | anyswf | 1de6caa | green | Phase 05 built-ins (Key, Mouse, Sound, SharedObject, drawing API, Date, timers, TextField...), profiler overlay and VRAM texture cache; `anyswf build --target psp|linux|windows|macos|android`, Android APK, compat records and page, CI. AVM1: corpus 15/15, Ruffle 82.9%. |
 | rpy2psp | 01ad577 | green | `rpy2psp build` (EBOOT folder with title, ICON0, PIC1), The Question played to its ending in PPSSPPHeadless matching the PC engine, saves, gapless loops, Linux package, CI, docs, compat. |
 | psp-companion | 5ba1731 | green | Phase 05: power, START menu, XMB art, pairing key in SAVEDATA, settings page with pairing, Windows installer (Inno), Linux tarball + systemd unit, user guides, CI and release. whisper.cpp and Piper tests pass locally; Satellite API pinned at 1.15. |
@@ -29,6 +29,7 @@ Workspace: plans, reports and CLAUDE.md updated; `scripts/ppsspp-headless/` rebu
 - Game files: AnySWF's three AS2 games, AnyPSP's four more titles, FireRed ROM, Paper Mario ROM for N64 phase 01 measurements.
 - User key: live Claude API run for psp-companion.
 - Public actions: GitHub Pages enablement (`PAGES_ENABLED`), release tags.
+- AnyPSP: `dot_result` in `runtime/cpu/generated_ops.h` still turns a constant NaN into a float; it passes on MSVC today but could be quieted the same way if inlining changes. Upstream PPSSPP likely has the same uninitialised `t` in `Int_Vsgn`.
 - Box changes made by agents: `ubuntu` added to the `kvm` group and `/dev/kvm` set to 0666 (emulator); Android SDKs under `~/Android/Sdk` and `~/android-sdk`; Ghidra 12.2 + JDK 25 under `~/tools`.
 
 ## Unresolved questions
