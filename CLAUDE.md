@@ -105,6 +105,7 @@ out/msvc/Release/anypsp-hle-coverage.exe [--json f] [--markdown f]   # HLE funct
 python tests/translated-conformance.py [cpu/...]        # same, through psp_recomp-translated runners (one shared build tree, out/tconf/runners)
                                                        # Linux: CMAKE_GENERATOR=Ninja CC=clang CXX=clang++ ... --tools out/linux --build-jobs 4
 ANYPSP_CPU_PROFILE=<file> <runner> ...                 # at exit: interpreter fallbacks per instruction name and interpreted entries
+python tests/translated-demos.py [cubevfpu ...] --tools out/linux   # translated demos vs anypsp-interp-gpu frame hashes
 out/msvc/Release/anypsp_cpu_difftest.exe               # generated code vs reference interpreter, random states (ctest cpu_difftest)
 out/msvc/Release/anypsp-interp-gpu.exe <prx> [--renderer gl|vulkan|soft] [--msaa n] [--vk-cache f|off] [--scale n] [--frames-dir d] [--png-every n] [--hashes f] [--screenshot f.png]
                                                        # [--disc dir] [--guest-path disc0:/...] [--input f:btn,...] [--hle-stubs file] as anypsp-interp

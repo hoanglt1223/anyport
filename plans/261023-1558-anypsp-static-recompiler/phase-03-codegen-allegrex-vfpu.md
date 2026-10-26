@@ -45,3 +45,12 @@ The Allegrex is a MIPS32 variant with extra instructions (`ext`, `ins`, `seb`, `
 ## Rollback
 
 Module-scoped; revert.
+
+## Implementation status (2026-10-26)
+
+- [x] Integer and FPU paths with differential tests; madd/maddu/msub/msubu, mfic/mtic, cfc1/ctc1, ll/sc inline.
+- [x] VFPU: 74 of 104 instructions translated natively (`runtime/cpu/generated_ops.h`, templates on the instruction word; a pending prefix runs the interpreter). UNH 1: interpreter calls from generated code fell from 8.1 M to 145 k over 9,000 frames; frame hashes unchanged.
+- [x] Differential test covers every inline instruction (29k encodings, 1.9 M random states).
+- [x] Dispatch table and fallback interpreter; import stubs are no longer translated (demos drew nothing).
+- [x] pspautotests CPU: 42/55 with the interpreter; translated runners match the interpreter on the tests checked.
+- [ ] Remaining: VFPU arithmetic ignores the guest FCR31 rounding mode on hardware (cpu/vfpu/fcr31); 30 VFPU ops (conversions, vsrt/vbfy, vrnd, colour packing, vmtvc) still go through the interpreter; vmmul/vtfm are bound by the bit-exact dot product (a 4-wide SSE2 multi-dot would help); cpu/cop0/eret needs IoFileMgrForKernel::sceIoOpen (HLE).
